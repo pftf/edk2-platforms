@@ -1,0 +1,34 @@
+#/** @file
+#
+#  Manipulate GPIOs.
+#
+#  Copyright (c) 2019, ARM Limited. All rights reserved.
+#  Copyright (c) 2018, Andrei Warkentin <andrey.warkentin@gmail.com>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                    = 0x0001001A
+  BASE_NAME                      = GpioLib
+  FILE_GUID                      = 718c3304-4976-4663-9b5c-413ac853d098
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = GpioLib
+
+[Sources]
+  GpioLib.c
+
+[Packages]
+  ArmPkg/ArmPkg.dec
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Broadcom/Bcm2711/Bcm2711.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  IoLib
+
+[Guids]
