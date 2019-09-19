@@ -10,7 +10,7 @@
 #ifndef __DWCHW_H__
 #define __DWCHW_H__
 
-#define DW2_USB_BASE_ADDRESS            0x3f980000
+#define DW2_USB_BASE_ADDRESS            0xfe980000
 
 #define HSOTG_REG(x)    (x)
 
