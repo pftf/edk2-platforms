@@ -16,6 +16,7 @@
  *  Memory Array Mapped Address (Type 19) - One per contiguous block per Physical Memroy Array
  *  System Boot Information (Type 32)
  *
+ *  Copyright (c) 2019, ARM Ltd. All rights reserved.
  *  Copyright (c) 2017-2018, Andrey Warkentin <andrey.warkentin@gmail.com>
  *  Copyright (c) 2013, Linaro.org
  *  Copyright (c) 2012, Apple Inc. All rights reserved.<BR>
@@ -111,8 +112,8 @@ SMBIOS_TABLE_TYPE0 mBIOSInfoType0 = {
 };
 
 CHAR8 *mBIOSInfoType0Strings[] = {
-  "https://github.com/andreiw/RaspberryPiPkg",             // Vendor String
-  "Raspberry Pi 64-bit UEFI (" __DATE__ " " __TIME__ ")",  // BiosVersion String
+  "github.com/tianocore/",             // Vendor String
+  "Raspberry Pi 4 64-bit UEFI (" __DATE__ " " __TIME__ ")",  // BiosVersion String
   __DATE__,
   NULL
 };
@@ -702,7 +703,7 @@ SysInfoUpdateSmbiosType1 (
 
   DEBUG ((DEBUG_ERROR, "Board Serial Number: %a\n", mSysInfoSerial));
 
-  mSysInfoType1.Uuid.Data1 = *(UINT32*)"RPi3";
+  mSysInfoType1.Uuid.Data1 = *(UINT32*)"RPi4";
   mSysInfoType1.Uuid.Data2 = 0x0;
   mSysInfoType1.Uuid.Data3 = 0x0;
   CopyMem (mSysInfoType1.Uuid.Data4, &BoardSerial, sizeof (BoardSerial));
