@@ -770,8 +770,7 @@ RpiFirmwareGetCommmandLine (
 
   CopyMem (CommandLine, Cmd->CommandLine, Cmd->TagHead.TagValueSize);
 
-  if (Cmd->TagHead.TagValueSize == 0 ||
-      CommandLine[Cmd->TagHead.TagValueSize - 1] != '\0') {
+  if (CommandLine[Cmd->TagHead.TagValueSize - 1] != '\0') {
     //
     // Add a NUL terminator if required.
     //
