@@ -318,7 +318,7 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdRemovableMediaImageVerificationPolicy|0x04
 !endif
 
-  gEmbeddedTokenSpaceGuid.PcdInterruptBaseAddress|0xff800000
+  gEmbeddedTokenSpaceGuid.PcdInterruptBaseAddress|0x40000000
   gArmTokenSpaceGuid.PcdArmArchTimerSecIntrNum|0x0
   gArmTokenSpaceGuid.PcdArmArchTimerIntrNum|0x1
   gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum|0x2
@@ -368,7 +368,7 @@
   gArmTokenSpaceGuid.PcdSystemMemorySize|0x3FC00000
 
   ## NS16550 compatible UART
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xfe215040
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x3f215040
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride|4
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|500000000
