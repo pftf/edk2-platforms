@@ -1,5 +1,6 @@
 /** @file
  *
+ *  Copyright (c) 2019, ARM Ltd. All rights reserved.
  *  Copyright (c) 2017, Andrey Warkentin <andrey.warkentin@gmail.com>
  *  Copyright (c) 2016, Linaro, Ltd. All rights reserved.
  *
@@ -477,11 +478,11 @@ FdtDxeInitialize (
       switch ((BoardRevision >> 4) & 0xFF) {
       case 0x08:
         DEBUG ((DEBUG_INFO, "Using Raspberry Pi 3 Model B internal Device Tree\n"));
-        FdtGuid = &gRaspberryPi3ModelBFdtGuid;
+        FdtGuid = &gRaspberryPi4ModelBFdtGuid;
         break;
       case 0x0D:
         DEBUG ((DEBUG_INFO, "Using Raspberry Pi 3 Model B+ internal Device Tree\n"));
-        FdtGuid = &gRaspberryPi3ModelBPlusFdtGuid;
+        FdtGuid = &gRaspberryPi4ModelBPlusFdtGuid;
         break;
       case 0x11:
         DEBUG ((DEBUG_INFO, "Using Raspberry Pi 4 Model B internal Device Tree\n"));
