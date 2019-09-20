@@ -36,8 +36,8 @@
 
 [Guids]
   gFdtTableGuid
-  gRaspberryPi4ModelBFdtGuid
-  gRaspberryPi4ModelBPlusFdtGuid
+  gRaspberryPi3ModelBFdtGuid
+  gRaspberryPi3ModelBPlusFdtGuid
   gRaspberryPi4ModelBFdtGuid
   gRaspberryPiDefaultFdtGuid
 

@@ -16,9 +16,9 @@
 #include <IndustryStandard/Acpi50.h>
 
 #define EFI_ACPI_OEM_ID                       {'M','C','R','S','F','T'} // OEMID 6 bytes long
-#define EFI_ACPI_OEM_TABLE_ID                 SIGNATURE_64 ('R','P','I','3','E','D','K','2') // OEM table id 8 bytes long
+#define EFI_ACPI_OEM_TABLE_ID                 SIGNATURE_64 ('R','P','I','4','E','D','K','2') // OEM table id 8 bytes long
 #define EFI_ACPI_OEM_REVISION                 0x02000820
-#define EFI_ACPI_CREATOR_ID                   SIGNATURE_32 ('R','P','I','3')
+#define EFI_ACPI_CREATOR_ID                   SIGNATURE_32 ('R','P','I','4')
 #define EFI_ACPI_CREATOR_REVISION             0x00000097
 
 #define EFI_ACPI_VENDOR_ID                    SIGNATURE_32 ('M','S','F','T')
