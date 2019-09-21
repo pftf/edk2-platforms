@@ -26,7 +26,7 @@
   MdeModulePkg/MdeModulePkg.dec
   ArmPlatformPkg/ArmPlatformPkg.dec
   ArmPkg/ArmPkg.dec
-  Platform/RaspberryPi/RPi3/RPi3.dec
+  Platform/RaspberryPi/RaspberryPi.dec
 
 [LibraryClasses]
   UefiBootServicesTableLib

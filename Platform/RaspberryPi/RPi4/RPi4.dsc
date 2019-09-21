@@ -156,12 +156,12 @@
   AuthVariableLib|MdeModulePkg/Library/AuthVariableLibNull/AuthVariableLibNull.inf
 !endif
   VarCheckLib|MdeModulePkg/Library/VarCheckLib/VarCheckLib.inf
-  GpioLib|Silicon/Broadcom/Bcm283x/Library/GpioLib/GpioLib.inf
+  GpioLib|Silicon/Broadcom/Bcm2711/Library/GpioLib/GpioLib.inf
 
 [LibraryClasses.common.SEC]
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
-  MemoryInitPeiLib|Platform/RaspberryPi/$(PLATFORM_NAME)/Library/MemoryInitPeiLib/MemoryInitPeiLib.inf
+  MemoryInitPeiLib|Platform/RaspberryPi/Library/MemoryInitPeiLib/MemoryInitPeiLib.inf
   PlatformPeiLib|ArmPlatformPkg/PlatformPei/PlatformPeiLib.inf
   ExtractGuidedSectionLib|EmbeddedPkg/Library/PrePiExtractGuidedSectionLib/PrePiExtractGuidedSectionLib.inf
   LzmaDecompressLib|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf
@@ -197,7 +197,7 @@
 [LibraryClasses.common.DXE_RUNTIME_DRIVER]
   MemoryAllocationLib|MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
   CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
-  EfiResetSystemLib|Platform/RaspberryPi/$(PLATFORM_NAME)/Library/ResetLib/ResetLib.inf
+  EfiResetSystemLib|Platform/RaspberryPi/Library/ResetLib/ResetLib.inf
   ArmSmcLib|ArmPkg/Library/ArmSmcLib/ArmSmcLib.inf
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
@@ -327,12 +327,12 @@
 [LibraryClasses.common]
   ArmLib|ArmPkg/Library/ArmLib/ArmBaseLib.inf
   ArmMmuLib|ArmPkg/Library/ArmMmuLib/ArmMmuBaseLib.inf
-  ArmPlatformLib|Platform/RaspberryPi/$(PLATFORM_NAME)/Library/PlatformLib/PlatformLib.inf
+  ArmPlatformLib|Platform/RaspberryPi/Library/PlatformLib/PlatformLib.inf
   TimerLib|ArmPkg/Library/ArmArchTimerLib/ArmArchTimerLib.inf
   CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
   UefiBootManagerLib|MdeModulePkg/Library/UefiBootManagerLib/UefiBootManagerLib.inf
   BootLogoLib|MdeModulePkg/Library/BootLogoLib/BootLogoLib.inf
-  PlatformBootManagerLib|Platform/RaspberryPi/$(PLATFORM_NAME)/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
+  PlatformBootManagerLib|Platform/RaspberryPi/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
   FileExplorerLib|MdeModulePkg/Library/FileExplorerLib/FileExplorerLib.inf
 
@@ -474,7 +474,7 @@
   #
   ArmPkg/Drivers/CpuDxe/CpuDxe.inf
   MdeModulePkg/Core/RuntimeDxe/RuntimeDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/VarBlockServiceDxe/VarBlockServiceDxe.inf
+  Platform/RaspberryPi/Drivers/VarBlockServiceDxe/VarBlockServiceDxe.inf
   MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
   MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf {
     <LibraryClasses>
@@ -501,18 +501,18 @@
 
   MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
   MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
+  Platform/RaspberryPi/Drivers/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
   MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/DisplayDxe/DisplayDxe.inf
+  Platform/RaspberryPi/Drivers/DisplayDxe/DisplayDxe.inf
 
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
 
   UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
-  Silicon/Broadcom/Bcm283x/Drivers/InterruptDxe/InterruptDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/RpiFirmwareDxe/RpiFirmwareDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/FdtDxe/FdtDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/ConfigDxe/ConfigDxe.inf
+  Silicon/Broadcom/Bcm2711/Drivers/InterruptDxe/InterruptDxe.inf
+  Platform/RaspberryPi/Drivers/RpiFirmwareDxe/RpiFirmwareDxe.inf
+  Platform/RaspberryPi/Drivers/FdtDxe/FdtDxe.inf
+  Platform/RaspberryPi/Drivers/ConfigDxe/ConfigDxe.inf
   ArmPkg/Drivers/TimerDxe/TimerDxe.inf
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
   MdeModulePkg/Universal/EbcDxe/EbcDxe.inf
@@ -557,7 +557,7 @@
     <LibraryClasses>
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
-      NULL|Platform/RaspberryPi/$(PLATFORM_NAME)/Library/PlatformUiAppLib/PlatformUiAppLib.inf
+      NULL|Platform/RaspberryPi/Library/PlatformUiAppLib/PlatformUiAppLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
 
@@ -570,7 +570,7 @@
   #
   # USB Support
   #
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/DwUsbHostDxe/DwUsbHostDxe.inf
+  Platform/RaspberryPi/Drivers/DwUsbHostDxe/DwUsbHostDxe.inf
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
@@ -579,9 +579,9 @@
   #
   # SD/MMC support
   #
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/SdHostDxe/SdHostDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/ArasanMmcHostDxe/ArasanMmcHostDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/MmcDxe/MmcDxe.inf
+  Platform/RaspberryPi/Drivers/SdHostDxe/SdHostDxe.inf
+  Platform/RaspberryPi/Drivers/ArasanMmcHostDxe/ArasanMmcHostDxe.inf
+  Platform/RaspberryPi/Drivers/MmcDxe/MmcDxe.inf
 
   #
   # Networking stack
@@ -591,7 +591,7 @@
   #
   # RNG
   #
-  Silicon/Broadcom/Bcm283x/Drivers/RngDxe/RngDxe.inf
+  Silicon/Broadcom/Bcm2711/Drivers/RngDxe/RngDxe.inf
 
   #
   # UEFI application (Shell Embedded Boot Loader)
