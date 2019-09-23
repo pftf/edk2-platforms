@@ -297,7 +297,7 @@ READ_LOCK_STATUS   = TRUE
   #
   # Pi logo (splash screen)
   #
-  INF Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/LogoDxe/LogoDxe.inf
+  INF Platform/RaspberryPi/Drivers/LogoDxe/LogoDxe.inf
 
   #
   # Device Tree support (used by FdtDxe)
