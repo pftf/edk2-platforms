@@ -536,7 +536,7 @@
   #
   # SMBIOS Support
   #
-  Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/PlatformSmbiosDxe/PlatformSmbiosDxe.inf
+  Platform/RaspberryPi/Drivers/PlatformSmbiosDxe/PlatformSmbiosDxe.inf
   MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 
   #

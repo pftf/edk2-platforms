@@ -244,7 +244,7 @@ READ_LOCK_STATUS   = TRUE
   #
   # SMBIOS Support
   #
-  INF Platform/RaspberryPi/$(PLATFORM_NAME)/Drivers/PlatformSmbiosDxe/PlatformSmbiosDxe.inf
+  INF Platform/RaspberryPi/Drivers/PlatformSmbiosDxe/PlatformSmbiosDxe.inf
   INF MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 
   #
