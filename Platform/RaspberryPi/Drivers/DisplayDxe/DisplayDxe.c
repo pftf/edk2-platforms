@@ -16,6 +16,15 @@
                                 PI3_BYTES_PER_PIXEL +                   \
                                 (posX) * PI3_BYTES_PER_PIXEL))
 
+#define MODE_800_ENABLED    BIT0
+#define MODE_640_ENABLED    BIT1
+#define MODE_1024_ENABLED   BIT2
+#define MODE_720P_ENABLED   BIT3
+#define MODE_1080P_ENABLED  BIT4
+#define MODE_NATIVE_ENABLED BIT5
+#define JUST_NATIVE_ENABLED MODE_NATIVE_ENABLED
+#define ALL_MODES           (BIT6 - 1)
+
 STATIC
 EFI_STATUS
 EFIAPI
@@ -103,8 +112,7 @@ STATIC EFI_HANDLE mDevice;
 STATIC RASPBERRY_PI_FIRMWARE_PROTOCOL *mFwProtocol;
 STATIC EFI_CPU_ARCH_PROTOCOL *mCpu;
 
-STATIC UINTN mLastMode;
-STATIC GOP_MODE_DATA mGopModeData[] = {
+STATIC GOP_MODE_DATA mGopModeTemplate[] = {
   { 800,  600  }, /* Legacy */
   { 640,  480  }, /* Legacy */
   { 1024, 768  }, /* Legacy */
@@ -112,6 +120,9 @@ STATIC GOP_MODE_DATA mGopModeData[] = {
   { 1920, 1080 }, /* 1080p */
   { 0,    0    }, /* Physical */
 };
+
+STATIC UINTN mLastMode;
+STATIC GOP_MODE_DATA mGopModeData[ARRAY_SIZE(mGopModeTemplate)];
 
 STATIC DISPLAY_DEVICE_PATH mDisplayProtoDevicePath =
 {
@@ -446,6 +457,7 @@ DriverStart (
   )
 {
   UINTN Index;
+  UINTN TempIndex;
   EFI_STATUS Status;
   VOID *Dummy;
 
@@ -473,24 +485,58 @@ DriverStart (
     goto Done;
   }
 
+  PcdSet8(PcdDisplayEnableScaledVModes,
+          PcdGet8(PcdDisplayEnableScaledVModes) & ALL_MODES);
 
-  if (PcdGet32 (PcdDisplayEnableVModes)) {
-    mLastMode = ARRAY_SIZE (mGopModeData) - 1;
-  } else {
-    mLastMode = 0;
+  if (PcdGet8(PcdDisplayEnableScaledVModes) == 0) {
+    PcdSet8(PcdDisplayEnableScaledVModes, JUST_NATIVE_ENABLED);
+  }
+
+  mLastMode = 0;
+  for  (TempIndex = 0, Index = 0;
+        TempIndex < ARRAY_SIZE(mGopModeTemplate); TempIndex++) {
+    if ((PcdGet8(PcdDisplayEnableScaledVModes) & (1 << TempIndex)) != 0) {
+      DEBUG((EFI_D_ERROR, "Mode %u: %u x %u present\n",
+             TempIndex, mGopModeTemplate[TempIndex].Width,
+             mGopModeTemplate[TempIndex].Height));
+
+      CopyMem(&mGopModeData[Index], &mGopModeTemplate[TempIndex],
+              sizeof (GOP_MODE_DATA));
+      mLastMode = Index;
+      Index++;
+    }
+  }
+
+  if (PcdGet8(PcdDisplayEnableScaledVModes) == JUST_NATIVE_ENABLED) {
     /*
      * mBootWidth x mBootHeight may not be sensible,
      * so clean it up, since we won't be adding
      * any other extra vmodes.
      */
     if (mBootWidth < 640 || mBootHeight < 480) {
+      /*
+       * At least 640x480. Hardware will downscale as required.
+       */
       mBootWidth = 640;
       mBootHeight = 480;
+    } else if (mBootWidth == 800 && mBootHeight == 480) {
+      /*
+       * The Pi 7" screen is close to 800x600, just pretend it is.
+       * The hardware will perform the required scaling and it won't
+       * look that bad.
+       */
+      mBootHeight = 600;
     }
   }
 
-  mGopModeData[mLastMode].Width = mBootWidth;
-  mGopModeData[mLastMode].Height = mBootHeight;
+  if ((PcdGet8(PcdDisplayEnableScaledVModes) & MODE_NATIVE_ENABLED) != 0) {
+    /*
+     * Adjust actual native res only if enabled native res (so
+     * last mode is native res).
+     */
+    mGopModeData[mLastMode].Width = mBootWidth;
+    mGopModeData[mLastMode].Height = mBootHeight;
+  }
 
   for (Index = 0; Index <= mLastMode; Index++) {
     UINTN FbSize;
