@@ -367,6 +367,11 @@
   gArmTokenSpaceGuid.PcdSystemMemoryBase|0x00400000
   gArmTokenSpaceGuid.PcdSystemMemorySize|0x3FC00000
 
+  #
+  # Device specific addresses
+  #
+  gRaspberryPiTokenSpaceGuid.PcdDw2UsbBaseAddress|0xfe980000
+  
   ## NS16550 compatible UART
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xfe215040
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|TRUE

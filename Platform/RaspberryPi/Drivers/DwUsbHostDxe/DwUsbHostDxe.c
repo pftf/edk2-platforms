@@ -2,6 +2,7 @@
  *
  *  Copyright (c) 2017-2018, Andrey Warkentin <andrey.warkentin@gmail.com>
  *  Copyright (c) 2015-2016, Linaro Limited. All rights reserved.
+ *  Copyright (c) 2019, ARM Limited. All rights reserved.
  *
  *  SPDX-License-Identifier: BSD-2-Clause-Patent
  *
@@ -1548,7 +1549,7 @@ CreateDwUsbHc (
   DwHc->DwUsbOtgHc.ClearRootHubPortFeature        = DwHcClearRootHubPortFeature;
   DwHc->DwUsbOtgHc.MajorRevision                  = 0x02;
   DwHc->DwUsbOtgHc.MinorRevision                  = 0x00;
-  DwHc->DwUsbBase                                 = DW2_USB_BASE_ADDRESS;
+  DwHc->DwUsbBase                                 = FixedPcdGet64 (PcdDw2UsbBaseAddress);
 
   Pages = EFI_SIZE_TO_PAGES (DWC2_STATUS_BUF_SIZE);
   DwHc->StatusBuffer = AllocatePages (Pages);

@@ -2,6 +2,7 @@
  *
  *  Copyright (c) 2017, Andrey Warkentin <andrey.warkentin@gmail.com>
  *  Copyright (c) 2015-2016, Linaro Limited. All rights reserved.
+ *  Copyright (c) 2019, ARM Limited. All rights reserved.
  *
  *  SPDX-License-Identifier: BSD-2-Clause-Patent
  *
@@ -9,8 +10,6 @@
 
 #ifndef __DWCHW_H__
 #define __DWCHW_H__
-
-#define DW2_USB_BASE_ADDRESS            0x3f980000
 
 #define HSOTG_REG(x)    (x)
 
