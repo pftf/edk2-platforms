@@ -16,7 +16,7 @@
  *  Memory Array Mapped Address (Type 19) - One per contiguous block per Physical Memroy Array
  *  System Boot Information (Type 32)
  *
- *  Copyright (c) 2017-2018, Andrey Warkentin <andrey.warkentin@gmail.com>
+ *  Copyright (c) 2017-2019, Andrey Warkentin <andrey.warkentin@gmail.com>
  *  Copyright (c) 2013, Linaro.org
  *  Copyright (c) 2012, Apple Inc. All rights reserved.<BR>
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -111,7 +111,7 @@ SMBIOS_TABLE_TYPE0 mBIOSInfoType0 = {
 };
 
 CHAR8 *mBIOSInfoType0Strings[] = {
-  "https://github.com/andreiw/RaspberryPiPkg",             // Vendor String
+  "https://github.com/andreiw/lampone",             // Vendor String
   "Raspberry Pi 64-bit UEFI (" __DATE__ " " __TIME__ ")",  // BiosVersion String
   __DATE__,
   NULL
@@ -133,19 +133,24 @@ SMBIOS_TABLE_TYPE1 mSysInfoType1 = {
 };
 
 #define PROD_BASE     8
-#define PROD_KNOWN   13
+#define PROD_KNOWN   17
 #define PROD_UNKNOWN 11
+#define PROD_4       17
 CHAR8 *ProductNames[] = {
   /* 8 */ "3",
   /* 9 */ "Zero",
   /* 10 */ "CM3",
   /* 11 */ "???",
   /* 12 */ "Zero W",
-  /* 13 */ "3B+"
+  /* 13 */ "3B+",
+  /* 14 */ "3A+",
+  /* 15 */ "???",
+  /* 16 */ "CM3+",
+  /* 17 */ "4"
 };
 
 #define MANU_UNKNOWN 0
-#define MANU_KNOWN   4
+#define MANU_KNOWN   5
 #define MANU_BASE    1
 CHAR8 *ManufNames[] = {
   "???",
@@ -153,9 +158,22 @@ CHAR8 *ManufNames[] = {
   /* 1 */ "Egoman",
   /* 2 */ "Embest",
   /* 3 */ "Sony Japan",
-  /* 4 */ "Embest"
+  /* 4 */ "Embest",
+  /* 5 */ "Stadium",
 };
 
+#define CPU_UNKNOWN 0
+#define CPU_KNOWN   3
+#define CPU_BASE    1
+CHAR8 *CpuNames[] = {
+  "???",
+  /* 0 */ "BCM2835",
+  /* 1 */ "BCM2836",
+  /* 2 */ "BCM2837",
+  /* 3 */ "BCM2711",
+};
+
+CHAR8 mSysInfoCpuName[sizeof ("BCMxxxx Armv8")];
 CHAR8 mSysInfoManufName[sizeof ("Sony Japan")];
 CHAR8 mSysInfoProductName[sizeof ("64-bit Raspberry Pi XXXXXX (rev. xxxxxxxx)")];
 CHAR8 mSysInfoSerial[sizeof (UINT64) * 2 + 1];
@@ -318,8 +336,8 @@ SMBIOS_TABLE_TYPE4 mProcessorInfoType4 = {
 
 CHAR8 *mProcessorInfoType4Strings[] = {
   "Socket",
-  "ARM",
-  "BCM2837 ARMv8",
+  "Broadcom",
+  mSysInfoCpuName,
   "1.0",
   "1.0",
   "1.0",
@@ -741,8 +759,24 @@ ProcessorInfoUpdateSmbiosType4 (
   )
 {
   EFI_STATUS Status;
+  UINT32 BoardRevision = 0;
+  UINTN Cpu = CPU_UNKNOWN;
   UINT32 Rate;
 
+    Status = mFwProtocol->GetModelRevision (&BoardRevision);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to get CPU type: %r\n", Status));
+  } else {
+    Cpu = (BoardRevision >> 12) & 0xf;
+  }
+
+  if (Cpu > CPU_KNOWN) {
+    Cpu = CPU_UNKNOWN;
+  } else {
+    Cpu += CPU_BASE;
+  }
+
+  AsciiSPrint (mSysInfoCpuName, sizeof (mSysInfoCpuName), "%a Armv8", CpuNames[Cpu]);
   mProcessorInfoType4.CoreCount = (UINT8)MaxCpus;
   mProcessorInfoType4.EnabledCoreCount = (UINT8)MaxCpus;
   mProcessorInfoType4.ThreadCount = (UINT8)MaxCpus;
@@ -826,15 +860,14 @@ MemArrMapInfoUpdateSmbiosType19 (
   )
 {
   EFI_STATUS Status;
-  UINT32 Base;
-  UINT32 Size;
+  UINT32 BoardRevision = 0;
 
-  Status = mFwProtocol->GetArmMem (&Base, &Size);
+  Status = mFwProtocol->GetModelRevision (&BoardRevision);
   if (Status != EFI_SUCCESS) {
     DEBUG ((DEBUG_ERROR, "Couldn't get the ARM memory size: %r\n", Status));
   } else {
-    mMemArrMapInfoType19.StartingAddress = Base / 1024;
-    mMemArrMapInfoType19.EndingAddress = (Base + Size - 1) / 1024;
+    mMemArrMapInfoType19.StartingAddress = 0;
+    mMemArrMapInfoType19.EndingAddress = ((BoardRevision >> 20) & 7) * 1024 * 1024 - 1;
   }
 
   LogSmbiosData ((EFI_SMBIOS_TABLE_HEADER*)&mMemArrMapInfoType19, mMemArrMapInfoType19Strings, NULL);
