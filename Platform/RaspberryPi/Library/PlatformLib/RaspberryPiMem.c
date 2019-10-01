@@ -29,38 +29,52 @@ extern UINT64 mGPUMemoryLength;
 
 STATIC ARM_MEMORY_REGION_DESCRIPTOR RaspberryPiMemoryRegionDescriptor[] = {
   {
-    /* Firmware Volume. */
+    /* 0 - Firmware Volume. */
     FixedPcdGet64 (PcdFdBaseAddress), FixedPcdGet64 (PcdFdBaseAddress),
     FixedPcdGet32 (PcdFdSize) - VariablesSize,
     ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK
   },
   {
-    /* Variables Volume. */
+    /* 1 - Variables Volume. */
     VariablesBase, VariablesBase,
     VariablesSize,
     ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK
   },
   {
-    /* ATF reserved RAM. */
+    /* 2 - ATF reserved RAM. */
     ATFBase, ATFBase,
     FixedPcdGet64 (PcdSystemMemoryBase) - ATFBase,
     ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK
   },
   {
-    /* System RAM. */
+    /* 3 - System RAM. */
     FixedPcdGet64 (PcdSystemMemoryBase), FixedPcdGet64 (PcdSystemMemoryBase),
     0,
     ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK
   },
   {
-    /* Reserved GPU RAM. */
+    /* 4 - Reserved GPU RAM. */
     0,
     0,
     0,
     ARM_MEMORY_REGION_ATTRIBUTE_DEVICE
   },
   {
-    /* SOC registers. */
+    /* 5 - More RAM. */
+    0x40000000,
+    0x40000000,
+    0xfc000000 - 0x40000000,
+    ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK
+  },
+  {
+    /* 6 - New SOC registers (PCIe, genet, ...) */
+    0xfc000000,
+    0xfc000000,
+    0x2000000,
+    ARM_MEMORY_REGION_ATTRIBUTE_DEVICE
+  },
+  {
+    /* 7 - SOC registers. */
     BCM2836_SOC_REGISTERS,
     BCM2836_SOC_REGISTERS,
     BCM2836_SOC_REGISTER_LENGTH,
@@ -142,13 +156,29 @@ ArmPlatformGetVirtualMemoryMap (
     RaspberryPiMemoryRegionDescriptor[4].VirtualBase,
     RaspberryPiMemoryRegionDescriptor[4].Length));
 
-  DEBUG ((DEBUG_INFO, "SoC reserved:\n"
+  DEBUG ((DEBUG_INFO, "More RAM:\n"
     "\tPhysicalBase: 0x%lX\n"
     "\tVirtualBase: 0x%lX\n"
     "\tLength: 0x%lX\n",
     RaspberryPiMemoryRegionDescriptor[5].PhysicalBase,
     RaspberryPiMemoryRegionDescriptor[5].VirtualBase,
     RaspberryPiMemoryRegionDescriptor[5].Length));
+
+  DEBUG ((DEBUG_INFO, "SoC reserved:\n"
+    "\tPhysicalBase: 0x%lX\n"
+    "\tVirtualBase: 0x%lX\n"
+    "\tLength: 0x%lX\n",
+    RaspberryPiMemoryRegionDescriptor[6].PhysicalBase,
+    RaspberryPiMemoryRegionDescriptor[6].VirtualBase,
+    RaspberryPiMemoryRegionDescriptor[6].Length));
+
+  DEBUG ((DEBUG_INFO, "More SoC reserved:\n"
+    "\tPhysicalBase: 0x%lX\n"
+    "\tVirtualBase: 0x%lX\n"
+    "\tLength: 0x%lX\n",
+    RaspberryPiMemoryRegionDescriptor[7].PhysicalBase,
+    RaspberryPiMemoryRegionDescriptor[7].VirtualBase,
+    RaspberryPiMemoryRegionDescriptor[7].Length));
 
   *VirtualMemoryMap = RaspberryPiMemoryRegionDescriptor;
 }
