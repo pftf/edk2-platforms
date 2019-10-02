@@ -2,6 +2,7 @@
 #
 #  ACPI table data and ASL sources required to boot the platform.
 #
+#  Copyright (c) 2019, ARM Limited. All rights reserved.
 #  Copyright (c) 2017, Andrey Warkentin <andrey.warkentin@gmail.com>
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #
@@ -34,7 +35,20 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  ArmPkg/ArmPkg.dec
+  ArmPlatformPkg/ArmPlatformPkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Broadcom/Bcm283x/Bcm283x.dec
 
 [FixedPcd]
-  gEmbeddedTokenSpaceGuid.PcdInterruptBaseAddress
+  gArmTokenSpaceGuid.PcdGicInterruptInterfaceBase
+  gArmTokenSpaceGuid.PcdGicDistributorBase
+  gArmTokenSpaceGuid.PcdArmArchTimerSecIntrNum
+  gArmTokenSpaceGuid.PcdArmArchTimerIntrNum
+  gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum
+  gArmTokenSpaceGuid.PcdArmArchTimerHypIntrNum
+  gBcm283xTokenSpaceGuid.PcdMmcHs1BaseAddress
+  gBcm283xTokenSpaceGuid.PcdWdogBaseAddress
+  gBcm283xTokenSpaceGuid.PcdMboxBaseAddress
