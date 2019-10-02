@@ -290,7 +290,7 @@ READ_LOCK_STATUS   = TRUE
   #
   # SD/MMC support
   #
-  INF Platform/RaspberryPi/Drivers/SdHostDxe/SdHostDxe.inf
+  # INF Platform/RaspberryPi/Drivers/SdHostDxe/SdHostDxe.inf
   INF Platform/RaspberryPi/Drivers/ArasanMmcHostDxe/ArasanMmcHostDxe.inf
   INF Platform/RaspberryPi/Drivers/MmcDxe/MmcDxe.inf
 
