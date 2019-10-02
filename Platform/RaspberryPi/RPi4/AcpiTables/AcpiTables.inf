@@ -35,11 +35,20 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  ArmPkg/ArmPkg.dec
+  ArmPlatformPkg/ArmPlatformPkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
   Silicon/Broadcom/Bcm283x/Bcm283x.dec
 
 [FixedPcd]
-  gEmbeddedTokenSpaceGuid.PcdInterruptBaseAddress
+  gArmTokenSpaceGuid.PcdGicInterruptInterfaceBase
+  gArmTokenSpaceGuid.PcdGicDistributorBase
+  gArmTokenSpaceGuid.PcdArmArchTimerSecIntrNum
+  gArmTokenSpaceGuid.PcdArmArchTimerIntrNum
+  gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum
+  gArmTokenSpaceGuid.PcdArmArchTimerHypIntrNum
   gBcm283xTokenSpaceGuid.PcdMmcHs1BaseAddress
   gBcm283xTokenSpaceGuid.PcdWdogBaseAddress
   gBcm283xTokenSpaceGuid.PcdMboxBaseAddress

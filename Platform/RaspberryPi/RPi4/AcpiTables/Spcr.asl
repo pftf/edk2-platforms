@@ -27,11 +27,11 @@
 [029h 0041   1]                    Bit Width : 20
 [02Ah 0042   1]                   Bit Offset : 00
 [02Bh 0043   1]         Encoded Access Width : 03 [DWord Access:32]
-[02Ch 0044   8]                      Address : 000000003f215000
+[02Ch 0044   8]                      Address : 00000000fe215000
 
 [034h 0052   1]               Interrupt Type : 0E
 [035h 0053   1]          PCAT-compatible IRQ : 00
-[036h 0054   4]                    Interrupt : 3D
+[036h 0054   4]                    Interrupt : 7D
 [03Ah 0058   1]                    Baud Rate : 07
 [03Bh 0059   1]                       Parity : 00
 [03Ch 0060   1]                    Stop Bits : 01
