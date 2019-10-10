@@ -1,5 +1,6 @@
 #/** @file
 #
+#  Copyright (c) 2019, ARM Limited. All rights reserved.
 #  Copyright (c) 2019 Linaro, Ltd. All rights reserved.
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -28,12 +29,16 @@
   IoLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
+  PcdLib
 
 [Protocols]
   gEfiRngProtocolGuid              ## PRODUCES
 
 [Guids]
   gEfiRngAlgorithmRaw
+
+[FixedPcd]
+  gBcm283xTokenSpaceGuid.PcdSocRegistersAddress
 
 [Depex]
   TRUE
