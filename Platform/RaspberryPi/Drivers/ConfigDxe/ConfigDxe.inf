@@ -66,6 +66,7 @@
   gRaspberryPiTokenSpaceGuid.PcdDebugShowUEFIExit
   gRaspberryPiTokenSpaceGuid.PcdDisplayEnableScaledVModes
   gRaspberryPiTokenSpaceGuid.PcdDisplayEnableSShot
+  gBcm283xTokenSpaceGuid.PcdSocRegistersAddress
 
 [FeaturePcd]
 
