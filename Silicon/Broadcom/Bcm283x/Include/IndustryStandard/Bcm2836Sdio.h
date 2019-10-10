@@ -1,5 +1,6 @@
 /** @file
  *
+ *  Copyright (c) 2019, ARM Limited. All rights reserved.
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *
  *  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -10,7 +11,7 @@
 #define __BCM2836_SDIO_H__
 
 //MMC/SD/SDIO1 register definitions.
-#define MMCHS1BASE        0x3F300000
+#define MMCHS1BASE        (FixedPcdGet64 (PcdMmcHs1BaseAddress))
 
 #define MMCHS_BLK         (MMCHS1BASE + 0x4)
 #define BLEN_512BYTES     (0x200UL << 0)
