@@ -41,3 +41,4 @@
 [FixedPcd]
   gEmbeddedTokenSpaceGuid.PcdInterruptBaseAddress
   gBcm283xTokenSpaceGuid.PcdMmcHs1BaseAddress
+  gBcm283xTokenSpaceGuid.PcdMboxBaseAddress

@@ -31,7 +31,7 @@
 #define BCM2836_WDOG_RSTC_WRCFG_FULL_RESET                  0x00000020
 
 /* mailbox interface constants */
-#define BCM2836_MBOX_BASE_ADDRESS                           0x3f00b880
+#define BCM2836_MBOX_BASE_ADDRESS                           (FixedPcdGet64 (PcdMboxBaseAddress))
 #define BCM2836_MBOX_READ_OFFSET                            0x00000000
 #define BCM2836_MBOX_STATUS_OFFSET                          0x00000018
 #define BCM2836_MBOX_CONFIG_OFFSET                          0x0000001c

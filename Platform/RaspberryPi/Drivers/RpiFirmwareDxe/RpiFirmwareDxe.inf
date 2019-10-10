@@ -42,5 +42,7 @@
 
 [FixedPcd]
   gBcm283xTokenSpaceGuid.PcdSocRegistersAddress
+  gBcm283xTokenSpaceGuid.PcdMboxBaseAddress
+  
 [Depex]
   TRUE
