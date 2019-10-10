@@ -212,7 +212,7 @@ READ_LOCK_STATUS   = TRUE
   INF Platform/RaspberryPi/Drivers/DisplayDxe/DisplayDxe.inf
 
   INF UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
-  INF Silicon/Broadcom/Bcm2711/Drivers/InterruptDxe/InterruptDxe.inf
+  INF Silicon/Broadcom/Bcm283x/Drivers/InterruptDxe/InterruptDxe.inf
   INF Platform/RaspberryPi/Drivers/RpiFirmwareDxe/RpiFirmwareDxe.inf
   INF Platform/RaspberryPi/Drivers/FdtDxe/FdtDxe.inf
   INF Platform/RaspberryPi/Drivers/ConfigDxe/ConfigDxe.inf
@@ -270,7 +270,7 @@ READ_LOCK_STATUS   = TRUE
   #
   # RNG
   #
-  INF Silicon/Broadcom/Bcm2711/Drivers/RngDxe/RngDxe.inf
+  INF Silicon/Broadcom/Bcm283x/Drivers/RngDxe/RngDxe.inf
 
   #
   # SCSI Bus and Disk Driver

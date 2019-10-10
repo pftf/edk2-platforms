@@ -106,7 +106,7 @@
   DefaultExceptionHandlerLib|ArmPkg/Library/DefaultExceptionHandlerLib/DefaultExceptionHandlerLib.inf
   CpuExceptionHandlerLib|ArmPkg/Library/ArmExceptionLib/ArmExceptionLib.inf
   ArmDisassemblerLib|ArmPkg/Library/ArmDisassemblerLib/ArmDisassemblerLib.inf
-  DmaLib|Silicon/Broadcom/Bcm2711/Library/PiDmaLib/NonCoherentDmaLib.inf
+  DmaLib|Silicon/Broadcom/Bcm283x/Library/PiDmaLib/NonCoherentDmaLib.inf
   TimeBaseLib|EmbeddedPkg/Library/TimeBaseLib/TimeBaseLib.inf
   ArmPlatformStackLib|ArmPlatformPkg/Library/ArmPlatformStackLib/ArmPlatformStackLib.inf
   ArmSmcLib|ArmPkg/Library/ArmSmcLib/ArmSmcLib.inf
@@ -156,7 +156,7 @@
   AuthVariableLib|MdeModulePkg/Library/AuthVariableLibNull/AuthVariableLibNull.inf
 !endif
   VarCheckLib|MdeModulePkg/Library/VarCheckLib/VarCheckLib.inf
-  GpioLib|Silicon/Broadcom/Bcm2711/Library/GpioLib/GpioLib.inf
+  GpioLib|Silicon/Broadcom/Bcm283x/Library/GpioLib/GpioLib.inf
 
 [LibraryClasses.common.SEC]
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
@@ -518,7 +518,7 @@
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
 
   UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
-  Silicon/Broadcom/Bcm2711/Drivers/InterruptDxe/InterruptDxe.inf
+  Silicon/Broadcom/Bcm283x/Drivers/InterruptDxe/InterruptDxe.inf
   Platform/RaspberryPi/Drivers/RpiFirmwareDxe/RpiFirmwareDxe.inf
   Platform/RaspberryPi/Drivers/FdtDxe/FdtDxe.inf
   Platform/RaspberryPi/Drivers/ConfigDxe/ConfigDxe.inf
@@ -600,7 +600,7 @@
   #
   # RNG
   #
-  Silicon/Broadcom/Bcm2711/Drivers/RngDxe/RngDxe.inf
+  Silicon/Broadcom/Bcm283x/Drivers/RngDxe/RngDxe.inf
 
   #
   # UEFI application (Shell Embedded Boot Loader)
