@@ -371,7 +371,11 @@
   # Device specific addresses
   #
   gRaspberryPiTokenSpaceGuid.PcdDw2UsbBaseAddress|0xfe980000
-  
+  gBcm283xTokenSpaceGuid.PcdSocRegistersAddress|0xfe000000
+  gBcm283xTokenSpaceGuid.PcdWdogBaseAddress|0xfe100000
+  gBcm283xTokenSpaceGuid.PcdMboxBaseAddress|0xfe00b880
+  gBcm283xTokenSpaceGuid.PcdMmcHs1BaseAddress|0xfe300000
+
   ## NS16550 compatible UART
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xfe215040
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|TRUE
