@@ -376,6 +376,7 @@
   # Device specific addresses
   #
   gBcm283xTokenSpaceGuid.PcdSocRegistersAddress|0x3f000000
+  gBcm283xTokenSpaceGuid.PcdMmcHs1BaseAddress|0x3f300000
   ## NS16550 compatible UART
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x3f215040
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|TRUE

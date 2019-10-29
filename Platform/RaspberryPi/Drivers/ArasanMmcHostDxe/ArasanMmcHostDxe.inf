@@ -44,6 +44,7 @@
 [Pcd]
   gRaspberryPiTokenSpaceGuid.PcdSdIsArasan
   gBcm283xTokenSpaceGuid.PcdSocRegistersAddress
+  gBcm283xTokenSpaceGuid.PcdMmcHs1BaseAddress
 
 [Depex]
   gRaspberryPiFirmwareProtocolGuid AND gRaspberryPiConfigAppliedProtocolGuid

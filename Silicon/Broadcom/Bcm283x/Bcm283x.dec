@@ -21,3 +21,4 @@
 
 [PcdsFixedAtBuild.common]
   gBcm283xTokenSpaceGuid.PcdSocRegistersAddress|0x0|UINT32|0x00000001
+  gBcm283xTokenSpaceGuid.PcdMmcHs1BaseAddress|0x0|UINT32|0x00000004
