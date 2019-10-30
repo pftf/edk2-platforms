@@ -51,7 +51,7 @@ NumBlocks     = 0x200
 # ATF primary boot image
 #
 0x00000000|0x00010000
-FILE = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmware/bl1.bin
+FILE = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmware/bl31.bin
 
 #
 # DTB.
@@ -60,15 +60,9 @@ FILE = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmware/bl1.bin
 DATA = { 0x00 }
 
 #
-# ATF secondary boot image in FIP format (BL2 + BL31)
-#
-0x00020000|0x00010000
-FILE = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmware/fip.bin
-
-#
 # UEFI image
 #
-0x00030000|0x001b0000
+0x00020000|0x001c0000
 gArmTokenSpaceGuid.PcdFvBaseAddress|gArmTokenSpaceGuid.PcdFvSize
 FV = FVMAIN_COMPACT
 
