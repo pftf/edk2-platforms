@@ -55,6 +55,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
   gBcm283xTokenSpaceGuid.PcdSocRegistersAddress
+  gBcm283xTokenSpaceGuid.PcdMboxBaseAddress
 
 [Ppis]
   gArmMpCoreInfoPpiGuid

@@ -377,6 +377,8 @@
   #
   gRaspberryPiTokenSpaceGuid.PcdDw2UsbBaseAddress|0x3f980000
   gBcm283xTokenSpaceGuid.PcdSocRegistersAddress|0x3f000000
+  gBcm283xTokenSpaceGuid.PcdWdogBaseAddress|0x3f100000
+  gBcm283xTokenSpaceGuid.PcdMboxBaseAddress|0x3f00b880
   gBcm283xTokenSpaceGuid.PcdMmcHs1BaseAddress|0x3f300000
 
   ## NS16550 compatible UART
