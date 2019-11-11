@@ -372,7 +372,9 @@
   #
   # Device specific addresses
   #
+  gRaspberryPiTokenSpaceGuid.PcdExtendedMemoryBase|0x40000000
   gRaspberryPiTokenSpaceGuid.PcdDw2UsbBaseAddress|0xfe980000
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxRegistersAddress|0xfc000000
   gBcm283xTokenSpaceGuid.PcdSocRegistersAddress|0xfe000000
   gBcm283xTokenSpaceGuid.PcdWdogBaseAddress|0xfe100000
   gBcm283xTokenSpaceGuid.PcdMboxBaseAddress|0xfe00b880
