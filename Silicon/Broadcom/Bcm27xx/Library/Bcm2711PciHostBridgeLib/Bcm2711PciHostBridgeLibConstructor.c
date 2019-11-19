@@ -163,7 +163,7 @@ Bcm2711PciHostBridgeLibConstructor (
 
   RMWRegister (PCIE_MISC_MISC_CTRL, PCIE_MISC_MISC_CTRL_SCB_ACCESS_EN_MASK, 1);
   RMWRegister (PCIE_MISC_MISC_CTRL, PCIE_MISC_MISC_CTRL_CFG_READ_UR_MODE_MASK, 1);
-  RMWRegister (PCIE_MISC_MISC_CTRL, PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK, BURST_SIZE_256);
+  RMWRegister (PCIE_MISC_MISC_CTRL, PCIE_MISC_MISC_CTRL_MAX_BURST_SIZE_MASK, BURST_SIZE_128);
 
   // "RC_BAR2" is the inbound TLP window, apparently
   // having non RAM regions in the window is ok (and
@@ -176,13 +176,13 @@ Bcm2711PciHostBridgeLibConstructor (
   // the linux driver makes the point that the offset must be aligned to its size
   // aka a 1G region must start on a 1G boundary
 
-  DEBUG ((DEBUG_ERROR, "RootBridge: Program bottom 2G of ram\n"));
+  DEBUG ((DEBUG_ERROR, "RootBridge: Program bottom 4G of ram\n"));
   
   
-  // lets assume a start addr of 0, size 2G
-  WdRegister (PCIE_MISC_RC_BAR2_CONFIG_LO, 0x10); //size =2 G
+  // lets assume a start addr of 0, size 4G
+  WdRegister (PCIE_MISC_RC_BAR2_CONFIG_LO, 0x11); //size =4G
   WdRegister (PCIE_MISC_RC_BAR2_CONFIG_HI, 0);    //start at addr0
-  RMWRegister(PCIE_MISC_MISC_CTRL, PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK, 0x10); //1GB=0xf=log2(size)-15), 4G=0x11
+  RMWRegister(PCIE_MISC_MISC_CTRL, PCIE_MISC_MISC_CTRL_SCB0_SIZE_MASK, 0x11); //1GB=0xf=log2(size)-15), 4G=0x11
   
   // RC_BAR1 pcie->gisb disable
   WdRegister (PCIE_MISC_RC_BAR1_CONFIG_LO, 0);
@@ -276,5 +276,7 @@ Bcm2711PciHostBridgeLibConstructor (
   /* field ENDIAN_MODE_BAR2 = DATA_ENDIAN */
   RMWRegister( PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1, PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1_ENDIAN_MODE_BAR2_MASK, 0);
   
+  RMWRegister (PCIE_MISC_HARD_PCIE_HARD_DEBUG, PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK, 1);
+
   return EFI_SUCCESS;
 }
