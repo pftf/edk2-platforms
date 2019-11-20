@@ -1,5 +1,5 @@
 /** @file
-  PCI Segment Library for PCI Segment Library for Bcm2711 (RPI4) SoC
+  PCI Segment Library for Bcm2711 (RPI4) SoC
 
   Copyright (c) 2007 - 2012, Intel Corporation. All rights reserved.<BR>
   Copyright (c) 2017, Linaro, Ltd. All rights reserved.<BR>
@@ -24,38 +24,15 @@ typedef enum {
   PciCfgWidthMax
 } PCI_CFG_WIDTH;
 
-// ok the PCIe config space is "odd" as usual
+// The PCIe config space is odd...
 // the root port is the first bytes of the register space (offset 0)
 // the individual devices are then selected by computing their BDF index
-// and writting that into the CFG_INDEX register (offset 0x9000)
+// and writing that into the CFG_INDEX register (offset 0x9000)
 // the "ECAM" data is then read/writeable at CFG_DATA (offset 0x8000)
-// meaning the ECAM read/writes in linux likely need to be spinlock protected
-
-/*
-#define 	PCIE_BUS_SHIFT   20
-#define 	PCIE_SLOT_SHIFT   15
-#define 	PCIE_FUNC_SHIFT   12
-static int cfg_index(int bus, int dev, int fn)
-{
-  return ((dev & 0x1f) << PCIE_SLOT_SHIFT)
-      | ((fn & 0x07) << PCIE_FUNC_SHIFT)
-      | (bus << PCIE_BUS_SHIFT);
-      }*/
-//  This cfg Addr/Data port thing is pretty close to the original PCI IO access method,
-//  should we be adding the "Enable Bit"?
-/*
-#define EFI_PCI_ADDRESS(bus, dev, func, reg) \
-  (UINT64) ( \
-  (((UINTN) bus) << 24) | \
-  (((UINTN) dev) << 16) | \
-  (((UINTN) func) << 8) | \
-  (((UINTN) (reg)) < 256 ? ((UINTN) (reg)) : (UINT64) (LShiftU64 ((UINT64) (reg), 32))))
-*/
 
 #define EFI_PCI_ADDR_BUS(bus) ((bus>>24)&0xFF)
 #define EFI_PCI_ADDR_DEV(dev) ((dev>>16)&0xFF)
 #define EFI_PCI_ADDR_FUN(fun) ((fun>>8) &0xFF)
-
 
 /**
   Assert the validity of a PCI Segment address.
@@ -84,30 +61,24 @@ PciSegmentLibGetConfigBase (
   IN  UINT64      Address
   )
 {
-    UINT64 Base = PCIE_REG_BASE;
-    UINT64 Offset = Address & 0xFFF; //pick off the 4k register offset
-    static UINT64 LastAccess = 0;
-    Address &= 0xFFFFF000; //clear the offset leave only the BDF
+  UINT64 Base = PCIE_REG_BASE;
+  UINT64 Offset = Address & 0xFFF; //pick off the 4k register offset
+  static UINT64 LastAccess = 0;
+  Address &= 0xFFFFF000; //clear the offset leave only the BDF
 
-    if (Address != 0) //The root port is at the base of the PCIe register space, otherwise the current device is at CFG_DATA
-    {
-	if (Address == 0x8000)
-	{
-	    Base += PCIE_EXT_CFG_DATA;
-	    if (LastAccess != Address)
-	    {
-		LastAccess = Address;
-//		DEBUG ((DEBUG_ERROR, "Cfg space offset update %x\n", Address));
-		MmioWrite32(PCIE_REG_BASE + PCIE_EXT_CFG_INDEX, 1<<20);
-	    //ArmDataMemoryBarrier ();    
-		
-	    }
-	}
-	else
-	    return 0xFFFFFFFF;
+  if (Address != 0) { //The root port is at the base of the PCIe register space
+    // The current device is at CFG_DATA
+    if (Address == 0x8000) {
+      Base += PCIE_EXT_CFG_DATA;
+      if (LastAccess != Address) {
+        LastAccess = Address;
+        MmioWrite32(PCIE_REG_BASE + PCIE_EXT_CFG_INDEX, 1<<20);
+      }
     }
-//    DEBUG ((DEBUG_ERROR, "Cfg space access %x:%x results in %x\n", Address, Offset, Base));
-    return Base+Offset;
+    else
+      return 0xFFFFFFFF;
+  }
+  return Base+Offset;
 }
 
 /**
@@ -133,7 +104,7 @@ PciSegmentLibReadWorker (
   Base = PciSegmentLibGetConfigBase(Address);
 
   if (Base==0xFFFFFFFF)
-      return Base;
+    return Base;
 
   switch (Width) {
   case PciCfgWidthUint8:
@@ -148,7 +119,6 @@ PciSegmentLibReadWorker (
   default:
     ASSERT (FALSE);
   }
-//  DEBUG ((DEBUG_ERROR, "Cfg space read (width%d) access %x is %x\n", Width, Address, Ret));
   return Ret;
 }
 
@@ -188,7 +158,6 @@ PciSegmentLibWriteWorker (
   default:
     ASSERT (FALSE);
   }
-//  DEBUG ((DEBUG_ERROR, "Cfg space write access %x is %x\n", Address, Data));
   return Data;
 }
 
@@ -1392,7 +1361,7 @@ PciSegmentWriteBuffer (
   // The Bcm/Rpi has a single cfg which can be mapped
   // to any given device on the bus, which means we need to remap
   // it basically everytime a new config access is done
-  
+
   //
   // Save Size for return
   //

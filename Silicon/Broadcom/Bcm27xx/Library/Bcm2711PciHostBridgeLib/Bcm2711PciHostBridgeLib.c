@@ -2,6 +2,7 @@
   PCI Host Bridge Library instance for Bcm2711 ARM SOC
 
   Copyright (c) 2017, Linaro Ltd. All rights reserved.<BR>
+  Copyright (c) 2019, Jeremy Linton
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -14,7 +15,6 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PcdLib.h>
 #include <Library/PciHostBridgeLib.h>
-//#include <Platform/Pcie.h>
 #include <Protocol/PciHostBridgeResourceAllocation.h>
 #include <Protocol/PciRootBridgeIo.h>
 
@@ -56,14 +56,7 @@ CHAR16 *mPciHostBridgeLibAcpiAddressSpaceTypeStr[] = {
   L"Mem", L"I/O", L"Bus"
 };
 
-#define MDE_CPU_ARM
-
-#ifndef MDE_CPU_ARM
-#define PCI_ALLOCATION_ATTRIBUTES       EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM | \
-                                        EFI_PCI_HOST_BRIDGE_MEM64_DECODE
-#else
 #define PCI_ALLOCATION_ATTRIBUTES       EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM
-#endif
 
 
 // these should come from the pcd...
@@ -71,14 +64,12 @@ CHAR16 *mPciHostBridgeLibAcpiAddressSpaceTypeStr[] = {
 #define BCM2711_PCI_SEG0_BUSNUM_MAX    0xFF
 #define BCM2711_PCI_SEG0_PORTIO_MIN    0x01
 #define BCM2711_PCI_SEG0_PORTIO_MAX    0x00 //MIN>MAX disables PIO
-//#define BCM2711_PCI_SEG0_PORTIO_MAX    0xFFFF
 #define BCM2711_PCI_SEG0_PORTIO_OFFSET 0x00
 // the bridge thinks its MMIO is here (which means it can't access this area in phy ram)
 #define BCM2711_PCI_SEG0_MMIO32_MIN    0xf8000000
 #define BCM2711_PCI_SEG0_MMIO32_MAX    (0xf8000000+0x03ffffff)
 // the CPU views it via a window here..
 #define BCM2711_PCI_SEG0_MMIO32_XLATE  (0x600000000-0xf8000000)
-//#define BCM2711_PCI_SEG0_MMIO32_XLATE  0xf8000000
 
 // we might be able to size another region?
 #define BCM2711_PCI_SEG0_MMIO64_MIN    0x00
@@ -95,21 +86,16 @@ PCI_ROOT_BRIDGE mPciRootBridges[] = {
     FALSE,                                  // ResourceAssigned
     PCI_ALLOCATION_ATTRIBUTES,              // AllocationAttributes
     { BCM2711_PCI_SEG0_BUSNUM_MIN,
-      BCM2711_PCI_SEG0_BUSNUM_MAX },      // Bus
+      BCM2711_PCI_SEG0_BUSNUM_MAX },        // Bus
     { BCM2711_PCI_SEG0_PORTIO_MIN,
       BCM2711_PCI_SEG0_PORTIO_MAX,
       MAX_UINT64 - BCM2711_PCI_SEG0_PORTIO_OFFSET + 1 },   // Io
     { BCM2711_PCI_SEG0_MMIO32_MIN,
       BCM2711_PCI_SEG0_MMIO32_MAX,
       MAX_UINT64 - BCM2711_PCI_SEG0_MMIO32_XLATE + 1 },    // Mem
-#ifndef MDE_CPU_ARM
-    { BCM2711_PCI_SEG0_MMIO64_MIN,
-      BCM2711_PCI_SEG0_MMIO64_MAX },      // MemAbove4G
-#else
     { MAX_UINT64, 0x0 },                    // MemAbove4G
-#endif
-    { MAX_UINT64, 0x0 },                    // PMem
-    { MAX_UINT64, 0x0 },                    // PMemAbove4G
+    { MAX_UINT64, 0x0 },                    // Pefetchable Mem
+    { MAX_UINT64, 0x0 },                    // Pefetchable MemAbove4G
     (EFI_DEVICE_PATH_PROTOCOL *)&mEfiPciRootBridgeDevicePath[0]
   }
 };
