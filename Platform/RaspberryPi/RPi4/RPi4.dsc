@@ -161,6 +161,14 @@
   VarCheckLib|MdeModulePkg/Library/VarCheckLib/VarCheckLib.inf
   GpioLib|Silicon/Broadcom/Bcm283x/Library/GpioLib/GpioLib.inf
 
+  #
+  # PCI dependencies
+  #
+  # PCI root port configuation and description
+  PciHostBridgeLib|Silicon/Broadcom/Bcm27xx/Library/Bcm2711PciHostBridgeLib/Bcm2711PciHostBridgeLib.inf
+  # The "segment lib" provides the CAM accessors/etc when they aren't ECAM standard
+  PciSegmentLib|Silicon/Broadcom/Bcm27xx/Library/Bcm2711PciSegmentLib/PciSegmentLib.inf
+
 [LibraryClasses.common.SEC]
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
@@ -523,7 +531,6 @@
 
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
 
-  UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
   ArmPkg/Drivers/ArmGic/ArmGicDxe.inf
   Platform/RaspberryPi/Drivers/RpiFirmwareDxe/RpiFirmwareDxe.inf
   Platform/RaspberryPi/Drivers/FdtDxe/FdtDxe.inf
@@ -585,6 +592,7 @@
   #
   # USB Support
   #
+  #MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
   Platform/RaspberryPi/Drivers/DwUsbHostDxe/DwUsbHostDxe.inf
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
@@ -607,6 +615,13 @@
   # RNG
   #
   Silicon/Broadcom/Bcm283x/Drivers/RngDxe/RngDxe.inf
+
+  #
+  # PCI Support
+  #
+  ArmPkg/Drivers/ArmPciCpuIo2Dxe/ArmPciCpuIo2Dxe.inf
+  MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf
+  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
 
   #
   # UEFI application (Shell Embedded Boot Loader)
