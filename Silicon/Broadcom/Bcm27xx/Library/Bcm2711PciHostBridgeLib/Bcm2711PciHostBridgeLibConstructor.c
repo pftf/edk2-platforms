@@ -177,7 +177,6 @@ Bcm2711PciHostBridgeLibConstructor (
   WdRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI, TopOfPciMap >> 32); //4GB? and bounce or just map the whole thing?
 
   // linux is doing this following PERST but why not do it at the same time as the other addr windows?
-
   // Set up the CPU MMIO addresses.
   // The BASE_LIMIT register holds the bottom part of the start and end addresses
   // in a 16-bit field (64k) aligned on a 1M boundary. (AKA only 12 bit active)
@@ -187,19 +186,12 @@ Bcm2711PciHostBridgeLibConstructor (
   // the mapping should be 1:1 if possible
   EFI_PHYSICAL_ADDRESS    cpu_addr_start = PCIE_CPU_MMIO_WINDOW;
   EFI_PHYSICAL_ADDRESS    cpu_addr_end = cpu_addr_start + PCIE_BRIDGE_MMIO_WINDOW;
-  EFI_PHYSICAL_ADDRESS    cpu_addr_low =  ((cpu_addr_start >> 16) & 0xffff) | (((cpu_addr_end >> 20) - 1) << 20);
 
   DEBUG ((DEBUG_ERROR, "RootBridge: MMIO CPU addr %llx\n", cpu_addr_start));
-
-  WdRegister( PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT, cpu_addr_low);
-  WdRegister( PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI, cpu_addr_start >> 32);
-  WdRegister( PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI, cpu_addr_end >> 32);
-
-  //RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT, PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK, cpu_addr_start>>16 );
-  //RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT, PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK, (cpu_addr_end-1)>>16 );
-
-  //RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI, PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI_BASE_MASK, cpu_addr_start>>32 );
-  //RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI, PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI_LIMIT_MASK, cpu_addr_end>>32 );
+  RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT, PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK, cpu_addr_start >> 16 );
+  RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT, PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK, (cpu_addr_end-1) >> 16 );
+  RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI, PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI_BASE_MASK, cpu_addr_start >> 32 );
+  RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI, PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI_LIMIT_MASK, cpu_addr_end >> 32 );
 
 
   // Consider MSI setup here, not that it matters much its likely the legacy intX
@@ -210,7 +202,7 @@ Bcm2711PciHostBridgeLibConstructor (
   WdRegister(PCIE_INTR2_CPU_MASK_CLR, 0xffffffff);
   WdRegister(PCIE_INTR2_CPU_MASK_SET, 0xffffffff);
 
-  // set link cap & link ctl
+  // set link cap & link ctl?
   //RMWRegister (BRCM_PCIE_CAP_REGS+PCI_LNKCAP, LNKCAP, pen);
   //RMWRegister (BRCM_PCIE_CTL_REGS+PCI_LNKCAP, LNKCAP, pen);
 
