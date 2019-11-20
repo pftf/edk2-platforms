@@ -30,9 +30,9 @@ typedef enum {
 // and writing that into the CFG_INDEX register (offset 0x9000)
 // the "ECAM" data is then read/writeable at CFG_DATA (offset 0x8000)
 
-#define EFI_PCI_ADDR_BUS(bus) ((bus>>24)&0xFF)
-#define EFI_PCI_ADDR_DEV(dev) ((dev>>16)&0xFF)
-#define EFI_PCI_ADDR_FUN(fun) ((fun>>8) &0xFF)
+#define EFI_PCI_ADDR_BUS(bus) ((bus>>20)&0xFF) // note PCI_SEGMENT_LIB_ADDRESS
+#define EFI_PCI_ADDR_DEV(dev) ((dev>>15)&0x1F)
+#define EFI_PCI_ADDR_FUN(fun) ((fun>>12) &0x07)
 
 /**
   Assert the validity of a PCI Segment address.
@@ -63,20 +63,24 @@ PciSegmentLibGetConfigBase (
 {
   UINT64 Base = PCIE_REG_BASE;
   UINT64 Offset = Address & 0xFFF; //pick off the 4k register offset
-  static UINT64 LastAccess = 0;
+  static UINT64 LastAccess = 0; //avoid repeat CFG_INDEX updates
   Address &= 0xFFFFF000; //clear the offset leave only the BDF
 
   if (Address != 0) { //The root port is at the base of the PCIe register space
     // The current device is at CFG_DATA
-    if (Address == 0x8000) {
-      Base += PCIE_EXT_CFG_DATA;
-      if (LastAccess != Address) {
-        LastAccess = Address;
-        MmioWrite32(PCIE_REG_BASE + PCIE_EXT_CFG_INDEX, 1<<20);
-      }
+    Base += PCIE_EXT_CFG_DATA;
+    if (LastAccess != Address) {
+      UINT32 dev = EFI_PCI_ADDR_DEV(Address);
+	  // Lets scan things out directly rather than translating the "bus" to a device, etc..
+	  // only we need to limit each bus to a single device.
+	  if (dev<1) {
+		  MmioWrite32(PCIE_REG_BASE + PCIE_EXT_CFG_INDEX, Address);
+		  LastAccess = Address;
+	  } else {
+		  LastAccess = 0;
+		  return 0xFFFFFFFF;
+	  }
     }
-    else
-      return 0xFFFFFFFF;
   }
   return Base+Offset;
 }
