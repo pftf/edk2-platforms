@@ -14,12 +14,12 @@
 #define BCM2711_SOC_REGISTER_LENGTH         0x02000000
 
 /* Generic PCI addresses */
-#define PCIE_TOP_OF_MEM_WIN                                 0xf8000000UL
-#define PCIE_CPU_MMIO_WINDOW                                0x600000000UL
-#define PCIE_BRIDGE_MMIO_LEN                                0x3FFFFFFUL
+#define PCIE_TOP_OF_MEM_WIN                                 (FixedPcdGet64 (PcdBcm27xxPciBusMmioAdr))
+#define PCIE_CPU_MMIO_WINDOW                                (FixedPcdGet64 (PcdBcm27xxPciCpuMmioAdr))
+#define PCIE_BRIDGE_MMIO_LEN                                (FixedPcdGet32 (PcdBcm27xxPciBusMmioLen))
 
 /* PCI root bridge control registers location */
-#define PCIE_REG_BASE                                       0xfd500000  // Base post translation? not working at the moment
+#define PCIE_REG_BASE                                       (FixedPcdGet32 (PcdBcm27xxPciRegBase))
 #define PCIE_REG_LIMIT                                      0x9310
 
 /* PCI root bridge control registers */

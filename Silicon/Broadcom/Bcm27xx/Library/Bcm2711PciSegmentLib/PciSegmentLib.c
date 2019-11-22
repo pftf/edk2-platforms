@@ -15,6 +15,7 @@
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
+#include <Library/PcdLib.h>
 #include <Library/PciSegmentLib.h>
 #include <IndustryStandard/Bcm2711.h>
 
