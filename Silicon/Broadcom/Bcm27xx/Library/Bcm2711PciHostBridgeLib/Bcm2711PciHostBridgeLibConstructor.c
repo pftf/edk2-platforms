@@ -58,7 +58,7 @@ RMWRegister (
   if (In) {
     while (!(Mask & Shift))
       Shift <<= 1;
-    Data = (MmioRead32 (Addr) & ~Mask) | (In * Shift);
+    Data = (MmioRead32 (Addr) & ~Mask) | ((In * Shift) & Mask);
   } else {
     Data = MmioRead32 (Addr) & ~Mask;
   }
@@ -170,9 +170,9 @@ Bcm2711PciHostBridgeLibConstructor (
   DEBUG ((DEBUG_VERBOSE, "RootBridge: MMIO CPU addr %llx\n", CpuAddrStart));
 
   RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT,
-    PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK, CpuAddrStart >> 16);
+    PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK, CpuAddrStart >> 20);
   RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT,
-    PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK, CpuAddrEnd >> 16);
+    PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK, CpuAddrEnd >> 20);
   RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI,
     PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI_BASE_MASK, CpuAddrStart >> 32);
   RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI,
