@@ -628,7 +628,7 @@
       DmaLib|EmbeddedPkg/Library/NonCoherentDmaLib/NonCoherentDmaLib.inf
     <PcdsFixedAtBuild>
       gEmbeddedTokenSpaceGuid.PcdDmaDeviceOffset|0x00000000
-      gEmbeddedTokenSpaceGuid.PcdDmaDeviceLimit|0xffffffff
+      gEmbeddedTokenSpaceGuid.PcdDmaDeviceLimit|0xbfffffff
   }
 
   #
