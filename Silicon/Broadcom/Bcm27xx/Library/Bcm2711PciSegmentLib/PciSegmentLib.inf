@@ -28,6 +28,7 @@
   BaseLib
   DebugLib
   IoLib
+  PcdLib
 
-[Pcd]
-#  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
+[FixedPcd]
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciRegBase

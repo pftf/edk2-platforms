@@ -45,13 +45,7 @@
   UefiBootServicesTableLib
 
 [FixedPcd]
-  gArmTokenSpaceGuid.PcdPciIoTranslation
-
-[Pcd]
-#  gSynQuacerTokenSpaceGuid.PcdPcieEnableMask
-#  gSynQuacerTokenSpaceGuid.PcdPlatformSettings
-
-[Depex]
-  # xTokenSpaceGuid.PcdPlatformSettings may be of the dynamic HII
-  # variety, which are backed by EFI variables
-#  gEfiVariableArchProtocolGuid
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciRegBase
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciBusMmioAdr
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciBusMmioLen
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciCpuMmioAdr
