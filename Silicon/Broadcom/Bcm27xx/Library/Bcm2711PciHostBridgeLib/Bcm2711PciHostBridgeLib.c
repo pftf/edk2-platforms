@@ -9,6 +9,7 @@
  *
  **/
 
+#include <IndustryStandard/Bcm2711.h>
 #include <IndustryStandard/Pci22.h>
 #include <Library/DebugLib.h>
 #include <Library/DevicePathLib.h>
@@ -59,9 +60,6 @@ CHAR16 *mPciHostBridgeLibAcpiAddressSpaceTypeStr[] = {
   L"Mem", L"I/O", L"Bus"
 };
 
-#define PCI_ALLOCATION_ATTRIBUTES       EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM
-
-
 // these should come from the pcd...
 #define BCM2711_PCI_SEG0_BUSNUM_MIN     0x00
 #define BCM2711_PCI_SEG0_BUSNUM_MAX     0xFF
@@ -69,10 +67,10 @@ CHAR16 *mPciHostBridgeLibAcpiAddressSpaceTypeStr[] = {
 #define BCM2711_PCI_SEG0_PORTIO_MAX     0x00 //MIN>MAX disables PIO
 #define BCM2711_PCI_SEG0_PORTIO_OFFSET  0x00
 // the bridge thinks its MMIO is here (which means it can't access this area in phy ram)
-#define BCM2711_PCI_SEG0_MMIO32_MIN     0xf8000000
-#define BCM2711_PCI_SEG0_MMIO32_MAX     (0xf8000000+0x03ffffff)
+#define BCM2711_PCI_SEG0_MMIO32_MIN     PCIE_TOP_OF_MEM_WIN
+#define BCM2711_PCI_SEG0_MMIO32_MAX     (PCIE_TOP_OF_MEM_WIN+PCIE_BRIDGE_MMIO_LEN)
 // the CPU views it via a window here..
-#define BCM2711_PCI_SEG0_MMIO32_XLATE   (0x600000000-0xf8000000)
+#define BCM2711_PCI_SEG0_MMIO32_XLATE   (PCIE_CPU_MMIO_WINDOW-PCIE_TOP_OF_MEM_WIN)
 
 // we might be able to size another region?
 #define BCM2711_PCI_SEG0_MMIO64_MIN     0x00
@@ -89,7 +87,7 @@ PCI_ROOT_BRIDGE mPciRootBridges[] = {
     FALSE,                                  // DmaAbove4G
     FALSE,                                  // NoExtendedConfigSpace (true=256 byte config, false=4k)
     FALSE,                                  // ResourceAssigned
-    PCI_ALLOCATION_ATTRIBUTES,              // AllocationAttributes
+    EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM,   // AllocationAttributes
     { BCM2711_PCI_SEG0_BUSNUM_MIN,
       BCM2711_PCI_SEG0_BUSNUM_MAX },        // Bus
     { BCM2711_PCI_SEG0_PORTIO_MIN,

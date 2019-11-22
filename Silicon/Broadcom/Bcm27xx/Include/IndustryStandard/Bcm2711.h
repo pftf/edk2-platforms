@@ -16,7 +16,7 @@
 /* Generic PCI addresses */
 #define PCIE_TOP_OF_MEM_WIN                                 0xf8000000UL
 #define PCIE_CPU_MMIO_WINDOW                                0x600000000UL
-#define PCIE_BRIDGE_MMIO_WINDOW                             0x4000000UL
+#define PCIE_BRIDGE_MMIO_LEN                                0x3FFFFFFUL
 
 /* PCI root bridge control registers location */
 #define PCIE_REG_BASE                                       0xfd500000  // Base post translation? not working at the moment
@@ -82,53 +82,5 @@
 #define BURST_SIZE_128                                      0
 #define BURST_SIZE_256                                      1
 #define BURST_SIZE_512                                      2
-
-#define PCI_EXP_LNKCAP                                      12          /* Link Capabilities */
-#define PCI_EXP_LNKCAP_SLS                                  0x0000000f  /* Supported Link Speeds */
-#define PCI_EXP_LNKCAP_SLS_2_5GB                            0x00000001  /* LNKCAP2 SLS Vector bit 0 */
-#define PCI_EXP_LNKCAP_SLS_5_0GB                            0x00000002  /* LNKCAP2 SLS Vector bit 1 */
-#define PCI_EXP_LNKCAP_SLS_8_0GB                            0x00000003  /* LNKCAP2 SLS Vector bit 2 */
-#define PCI_EXP_LNKCAP_SLS_16_0GB                           0x00000004  /* LNKCAP2 SLS Vector bit 3 */
-#define PCI_EXP_LNKCAP_SLS_32_0GB                           0x00000005  /* LNKCAP2 SLS Vector bit 4 */
-#define PCI_EXP_LNKCAP_MLW                                  0x000003f0  /* Maximum Link Width */
-#define PCI_EXP_LNKCAP_ASPMS                                0x00000c00  /* ASPM Support */
-#define PCI_EXP_LNKCAP_L0SEL                                0x00007000  /* L0s Exit Latency */
-#define PCI_EXP_LNKCAP_L1EL                                 0x00038000  /* L1 Exit Latency */
-#define PCI_EXP_LNKCAP_CLKPM                                0x00040000  /* Clock Power Management */
-#define PCI_EXP_LNKCAP_SDERC                                0x00080000  /* Surprise Down Error Reporting Capable */
-#define PCI_EXP_LNKCAP_DLLLARC                              0x00100000  /* Data Link Layer Link Active Reporting Capable */
-#define PCI_EXP_LNKCAP_LBNC                                 0x00200000  /* Link Bandwidth Notification Capability */
-#define PCI_EXP_LNKCAP_PN                                   0xff000000  /* Port Number */
-#define PCI_EXP_LNKCTL                                      16          /* Link Control */
-#define PCI_EXP_LNKCTL_ASPMC                                0x0003      /* ASPM Control */
-#define PCI_EXP_LNKCTL_ASPM_L0S                             0x0001      /* L0s Enable */
-#define PCI_EXP_LNKCTL_ASPM_L1                              0x0002      /* L1 Enable */
-#define PCI_EXP_LNKCTL_RCB                                  0x0008      /* Read Completion Boundary */
-#define PCI_EXP_LNKCTL_LD                                   0x0010      /* Link Disable */
-#define PCI_EXP_LNKCTL_RL                                   0x0020      /* Retrain Link */
-#define PCI_EXP_LNKCTL_CCC                                  0x0040      /* Common Clock Configuration */
-#define PCI_EXP_LNKCTL_ES                                   0x0080      /* Extended Synch */
-#define PCI_EXP_LNKCTL_CLKREQ_EN                            0x0100      /* Enable clkreq */
-#define PCI_EXP_LNKCTL_HAWD                                 0x0200      /* Hardware Autonomous Width Disable */
-#define PCI_EXP_LNKCTL_LBMIE                                0x0400      /* Link Bandwidth Management Interrupt Enable */
-#define PCI_EXP_LNKCTL_LABIE                                0x0800      /* Link Autonomous Bandwidth Interrupt Enable */
-#define PCI_EXP_LNKSTA                                      18          /* Link Status */
-#define PCI_EXP_LNKSTA_CLS                                  0x000f      /* Current Link Speed */
-#define PCI_EXP_LNKSTA_CLS_2_5GB                            0x0001      /* Current Link Speed 2.5GT/s */
-#define PCI_EXP_LNKSTA_CLS_5_0GB                            0x0002      /* Current Link Speed 5.0GT/s */
-#define PCI_EXP_LNKSTA_CLS_8_0GB                            0x0003      /* Current Link Speed 8.0GT/s */
-#define PCI_EXP_LNKSTA_CLS_16_0GB                           0x0004      /* Current Link Speed 16.0GT/s */
-#define PCI_EXP_LNKSTA_CLS_32_0GB                           0x0005      /* Current Link Speed 32.0GT/s */
-#define PCI_EXP_LNKSTA_NLW                                  0x03f0      /* Negotiated Link Width */
-#define PCI_EXP_LNKSTA_NLW_X1                               0x0010      /* Current Link Width x1 */
-#define PCI_EXP_LNKSTA_NLW_X2                               0x0020      /* Current Link Width x2 */
-#define PCI_EXP_LNKSTA_NLW_X4                               0x0040      /* Current Link Width x4 */
-#define PCI_EXP_LNKSTA_NLW_X8                               0x0080      /* Current Link Width x8 */
-#define PCI_EXP_LNKSTA_NLW_SHIFT                            4           /* Start of NLW mask in link status */
-#define PCI_EXP_LNKSTA_LT                                   0x0800      /* Link Training */
-#define PCI_EXP_LNKSTA_SLC                                  0x1000      /* Slot Clock Configuration */
-#define PCI_EXP_LNKSTA_DLLLA                                0x2000      /* Data Link Layer Link Active */
-#define PCI_EXP_LNKSTA_LBMS                                 0x4000      /* Link Bandwidth Management Status */
-#define PCI_EXP_LNKSTA_LABS                                 0x8000      /* Link Autonomous Bandwidth Status */
 
 #endif /* BCM2711_H__ */
