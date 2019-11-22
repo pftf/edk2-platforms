@@ -384,6 +384,12 @@
   gBcm27xxTokenSpaceGuid.PcdBcm27xxRegistersAddress|0xfc000000
   gBcm283xTokenSpaceGuid.PcdBcm283xRegistersAddress|0xfe000000
 
+  # PCIe specific addresses
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciRegBase|0xfd500000
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciBusMmioAdr|0xf8000000
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciBusMmioLen|0x3ffffff
+  gBcm27xxTokenSpaceGuid.PcdBcm27xxPciCpuMmioAdr|0x600000000
+
   ## NS16550 compatible UART
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xfe215040
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|TRUE
