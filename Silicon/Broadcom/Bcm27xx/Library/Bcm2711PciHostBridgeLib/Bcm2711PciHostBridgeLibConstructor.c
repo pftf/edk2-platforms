@@ -63,7 +63,6 @@ RMWRegister (
     Data = MmioRead32 (Addr) & ~Mask;
   }
 
-//  DEBUG ((DEBUG_ERROR, "RootBridge pci write %x to %x\n", Data, Addr));
   MmioWrite32 (Addr, Data);
 
   ArmDataMemoryBarrier ();
@@ -80,7 +79,6 @@ WdRegister (
   EFI_PHYSICAL_ADDRESS  Base = PCIE_REG_BASE;
 
   MmioWrite32 (Base + Offset, In);
-//  DEBUG ((DEBUG_ERROR, "RootBridge pci write %x to %x\n", In, Base+Offset));
 
   ArmDataMemoryBarrier ();
 }
@@ -109,7 +107,8 @@ Bcm2711PciHostBridgeLibConstructor (
   RMWRegister (PCIE_RGR1_SW_INIT_1, PCIE_RGR1_SW_INIT_1_INIT_MASK, 0);
 
 
-  RMWRegister (PCIE_MISC_HARD_PCIE_HARD_DEBUG, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK, 0);
+  RMWRegister (PCIE_MISC_HARD_PCIE_HARD_DEBUG,
+			   PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK, 0);
   RdRegister (PCIE_MISC_HARD_PCIE_HARD_DEBUG);
   // Wait for SerDes to be stable
   gBS->Stall (1000);
@@ -128,11 +127,11 @@ Bcm2711PciHostBridgeLibConstructor (
   // so lets just map the entire address space.
   //
   // For regions > 64K then the pci->mem window size = log2(size)-15
-  // which is dumped into the low bits of the offset and written to the "LO" register
-  // with the high bits of the offset written into the "HI" part.
-  // The Linux driver makes the point that the offset must be aligned to its size
-  // aka a 1G region must start on a 1G boundary.
-  // The size parms are 1GB=0xf=log2(size)-15), or 4G=0x11
+  // which is dumped into the low bits of the offset and written to
+  // the "LO" register with the high bits of the offset written into
+  // the "HI" part. The Linux driver makes the point that the offset
+  // must be aligned to its size aka a 1G region must start on a 1G
+  // boundary. The size parms are 1GB=0xf=log2(size)-15), or 4G=0x11
   //
 
   DEBUG ((DEBUG_VERBOSE, "RootBridge: Program bottom 4G of ram\n"));
@@ -151,16 +150,21 @@ Bcm2711PciHostBridgeLibConstructor (
 
   DEBUG ((DEBUG_VERBOSE, "RootBridge: MMIO PCIe addr %llx\n", TopOfPciMap));
   // See brcm_pcie_set_outbound_win() in the raspberrypi tree
+  //
+  // All the _WIN0_ values make one think there can be more than one
+  // mapping, which might mean its possible to program a prefetchable
+  // window, or a PIO window too?
+  //
+  // Setup the PCI side of the MMIO window.
   WdRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO, TopOfPciMap);
-  WdRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI, TopOfPciMap >> 32); // 4GB? and bounce or just map the whole thing?
+  WdRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI, TopOfPciMap >> 32);
 
   //
-  // Linux is doing this following PERST but why not do it at the same time as the other addr windows?
-  // Set up the CPU MMIO addresses.
-  // The BASE_LIMIT register holds the bottom part of the start and end addresses
-  // in a 16-bit field (64k) aligned on a 1M boundary (aka only 12 bit active)
-  // the top 32-bits are then in their own registers.
-  // Further these addrss ranges are setup to match the Linux driver and seem less than ideal on the RPi
+  // Set up the CPU MMIO addresses. The BASE_LIMIT register holds the
+  // bottom part of the start and end addresses in a 16-bit field (64k)
+  // aligned on a 1M boundary (aka only 12 bit active) the top 32-bits
+  // are then in their own registers. Further these addrss ranges are
+  // setup to match the Linux driver and seem less than ideal on the RPi
   //
   // The mapping should be 1:1 if possible
   //
