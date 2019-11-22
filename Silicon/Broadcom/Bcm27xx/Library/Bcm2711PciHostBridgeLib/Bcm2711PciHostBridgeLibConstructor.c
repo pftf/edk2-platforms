@@ -27,39 +27,17 @@
 #include <PiDxe.h>
 #include <Protocol/PciHostBridgeResourceAllocation.h>
 
-STATIC UINT32 BogusCatch;
-
 STATIC
 UINT32
 RdRegister (
-  UINT32                Offset,
-  UINT32                Mask
+  UINT32                Offset
   )
 {
   EFI_PHYSICAL_ADDRESS  Base = PCIE_REG_BASE;
 
   ArmDataMemoryBarrier ();
-  if (!Mask) //hmmm maybe C++'s default parms are useful?
-      Mask = (UINT32)-1;
 
-  return MmioRead32 (Base + Offset) & Mask;
-}
-
-
-STATIC
-UINT32
-RdRegister16 (
-  UINT32                Offset,
-  UINT32                Mask
-  )
-{
-  EFI_PHYSICAL_ADDRESS  Base = PCIE_REG_BASE;
-
-  ArmDataMemoryBarrier ();
-  if (!Mask) //hmmm maybe C++'s default parms are useful?
-      Mask = (UINT32)-1;
-
-  return MmioRead16 (Base + Offset) & Mask;
+  return MmioRead32 (Base + Offset);
 }
 
 
@@ -85,11 +63,9 @@ RMWRegister (
     Data = MmioRead32 (Addr) & ~Mask;
   }
 
-  DEBUG ((DEBUG_ERROR, "RootBridge pci write %x to %x\n", Data, Addr));
   MmioWrite32 (Addr, Data);
 
   ArmDataMemoryBarrier ();
-  BogusCatch = RdRegister(Offset, 0);
 }
 
 
@@ -103,10 +79,8 @@ WdRegister (
   EFI_PHYSICAL_ADDRESS  Base = PCIE_REG_BASE;
 
   MmioWrite32 (Base + Offset, In);
-  DEBUG ((DEBUG_ERROR, "RootBridge pci write %x to %x\n", In, Base+Offset));
 
   ArmDataMemoryBarrier ();
-  BogusCatch = RdRegister(Offset, 0);
 }
 
 
@@ -121,7 +95,7 @@ Bcm2711PciHostBridgeLibConstructor (
   UINT32                Data;
   EFI_PHYSICAL_ADDRESS  TopOfPciMap;
 
-  DEBUG ((DEBUG_ERROR, "RootBridge constructor\n"));
+  DEBUG ((DEBUG_VERBOSE, "PCIe RootBridge constructor\n"));
 
   // Reset controller
   RMWRegister (PCIE_RGR1_SW_INIT_1, PCIE_RGR1_SW_INIT_1_INIT_MASK, 1);
@@ -133,14 +107,15 @@ Bcm2711PciHostBridgeLibConstructor (
   RMWRegister (PCIE_RGR1_SW_INIT_1, PCIE_RGR1_SW_INIT_1_INIT_MASK, 0);
 
 
-  RMWRegister (PCIE_MISC_HARD_PCIE_HARD_DEBUG, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK, 0);
-  RdRegister (PCIE_MISC_HARD_PCIE_HARD_DEBUG, 0);
+  RMWRegister (PCIE_MISC_HARD_PCIE_HARD_DEBUG,
+    PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK, 0);
+  RdRegister (PCIE_MISC_HARD_PCIE_HARD_DEBUG);
   // Wait for SerDes to be stable
   gBS->Stall (1000);
 
   // Read revision
-  Data = RdRegister (PCIE_MISC_REVISION, PCIE_MISC_REVISION_MAJMIN_MASK); //0xffff
-  DEBUG ((DEBUG_ERROR, "RootBridge: Revision %x\n", Data));
+  Data = RdRegister (PCIE_MISC_REVISION);
+  DEBUG ((DEBUG_INFO, "RootBridge: Revision %x\n", Data & PCIE_MISC_REVISION_MAJMIN_MASK));
 
   RMWRegister (PCIE_MISC_MISC_CTRL, PCIE_MISC_MISC_CTRL_SCB_ACCESS_EN_MASK, 1);
   RMWRegister (PCIE_MISC_MISC_CTRL, PCIE_MISC_MISC_CTRL_CFG_READ_UR_MODE_MASK, 1);
@@ -152,14 +127,14 @@ Bcm2711PciHostBridgeLibConstructor (
   // so lets just map the entire address space.
   //
   // For regions > 64K then the pci->mem window size = log2(size)-15
-  // which is dumped into the low bits of the offset and written to the "LO" register
-  // with the high bits of the offset written into the "HI" part.
-  // The Linux driver makes the point that the offset must be aligned to its size
-  // aka a 1G region must start on a 1G boundary.
-  // The size parms are 1GB=0xf=log2(size)-15), or 4G=0x11
+  // which is dumped into the low bits of the offset and written to
+  // the "LO" register with the high bits of the offset written into
+  // the "HI" part. The Linux driver makes the point that the offset
+  // must be aligned to its size aka a 1G region must start on a 1G
+  // boundary. The size parms are 1GB=0xf=log2(size)-15), or 4G=0x11
   //
 
-  DEBUG ((DEBUG_ERROR, "RootBridge: Program bottom 4G of ram\n"));
+  DEBUG ((DEBUG_VERBOSE, "RootBridge: Program bottom 4G of ram\n"));
 
   // lets assume a start addr of 0, size 4G
   WdRegister (PCIE_MISC_RC_BAR2_CONFIG_LO, 0x11);   /* Size = 4G */
@@ -173,30 +148,36 @@ Bcm2711PciHostBridgeLibConstructor (
 
   TopOfPciMap = PCIE_TOP_OF_MEM_WIN;
 
-  DEBUG ((DEBUG_ERROR, "RootBridge: MMIO PCIe addr %llx\n", TopOfPciMap));
-  // See brcm_pcie_set_outbound_win() in the raspberrypi tree
-  WdRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO, TopOfPciMap);
-  WdRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI, TopOfPciMap >> 32); // 4GB? and bounce or just map the whole thing?
+  DEBUG ((DEBUG_VERBOSE, "RootBridge: MMIO PCIe addr %llx\n", TopOfPciMap));
 
   //
-  // Linux is doing this following PERST but why not do it at the same time as the other addr windows?
-  // Set up the CPU MMIO addresses.
-  // The BASE_LIMIT register holds the bottom part of the start and end addresses
-  // in a 16-bit field (64k) aligned on a 1M boundary (aka only 12 bit active)
-  // the top 32-bits are then in their own registers.
-  // Further these addrss ranges are setup to match the Linux driver and seem less than ideal on the RPi
+  // Setup the PCI side of the MMIO window.
+  //
+  // All the _WIN0_ values make one think there can be more than one
+  // mapping, which might mean it's possible to program a prefetchable
+  // window, or a PIO window...
+  //
+  WdRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO, TopOfPciMap);
+  WdRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI, TopOfPciMap >> 32);
+
+  //
+  // Set up the CPU MMIO addresses. The BASE_LIMIT register holds the
+  // bottom part of the start and end addresses in a 16-bit field (64k)
+  // aligned on a 1M boundary (aka only 12 bit active) the top 32-bits
+  // are then in their own registers. Further these addrss ranges are
+  // setup to match the Linux driver and seem less than ideal on the RPi
   //
   // The mapping should be 1:1 if possible
   //
   EFI_PHYSICAL_ADDRESS    CpuAddrStart = PCIE_CPU_MMIO_WINDOW;
-  EFI_PHYSICAL_ADDRESS    CpuAddrEnd   = CpuAddrStart + PCIE_BRIDGE_MMIO_WINDOW;
+  EFI_PHYSICAL_ADDRESS    CpuAddrEnd   = CpuAddrStart + PCIE_BRIDGE_MMIO_LEN;
 
-  DEBUG ((DEBUG_ERROR, "RootBridge: MMIO CPU addr %llx\n", CpuAddrStart));
+  DEBUG ((DEBUG_VERBOSE, "RootBridge: MMIO CPU addr %llx\n", CpuAddrStart));
 
   RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT,
     PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_BASE_MASK, CpuAddrStart >> 16);
   RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT,
-    PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK, (CpuAddrEnd-1) >> 16);
+    PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT_LIMIT_MASK, CpuAddrEnd >> 16);
   RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI,
     PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI_BASE_MASK, CpuAddrStart >> 32);
   RMWRegister (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI,
@@ -206,7 +187,6 @@ Bcm2711PciHostBridgeLibConstructor (
   // Consider MSI setup here, not that it matters much its likely the legacy intX
   // is as fast or faster...
   //
-  DEBUG ((DEBUG_ERROR, "RootBridge: clear ints\n"));
 
   // Clear and mask interrupts.
   WdRegister (PCIE_INTR2_CPU_MASK_CLR, 0xffffffff);
@@ -218,15 +198,15 @@ Bcm2711PciHostBridgeLibConstructor (
 
   // De-assert PERST
   RMWRegister (PCIE_RGR1_SW_INIT_1, PCIE_RGR1_SW_INIT_1_PERST_MASK, 0);
-  DEBUG ((DEBUG_ERROR, "RootBridge: Reset done\n"));
+  DEBUG ((DEBUG_VERBOSE, "RootBridge: Reset done\n"));
 
   // Wait for linkup
   do {
-      Data = RdRegister (PCIE_MISC_PCIE_STATUS, 0);
+      Data = RdRegister (PCIE_MISC_PCIE_STATUS);
       gBS->Stall (1000);
       Timeout --;
   } while (((Data & 0x30) != 0x030) && (Timeout));
-  DEBUG ((DEBUG_ERROR, "PCIe link ready (status=%x) Timeout=%d\n", Data, Timeout));
+  DEBUG ((DEBUG_VERBOSE, "PCIe link ready (status=%x) Timeout=%d\n", Data, Timeout));
 
   if ((Data & 0x30) != 0x30) {
     DEBUG ((DEBUG_ERROR, "PCIe link not ready (status=%x)\n", Data));
@@ -240,10 +220,6 @@ Bcm2711PciHostBridgeLibConstructor (
 
   // Change class code of the root port
   RMWRegister(BRCM_PCIE_CLASS, PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK, 0x60400);
-
-  Data = RdRegister16(BRCM_PCIE_CAP_REGS + PCI_EXP_LNKSTA, 0);
-  DEBUG ((DEBUG_ERROR, "link up, %d Gbps x%u\n", Data & PCI_EXP_LNKSTA_CLS,
-    (Data & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT));
 
   //
   // PCIe->SCB endian mode for BAR
