@@ -2,6 +2,7 @@
 
   This driver produces an EFI_RNG_PROTOCOL instance for the Broadcom 2836 RNG
 
+  Copyright (C) 2019, Pete Batard <pete@akeo.ie>
   Copyright (C) 2019, Linaro Ltd. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -12,6 +13,8 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
+#include <Library/PcdLib.h>
+#include <Library/TimerLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 
 #include <IndustryStandard/Bcm2836.h>
@@ -20,6 +23,8 @@
 
 #define RNG_WARMUP_COUNT        0x40000
 #define RNG_MAX_RETRIES         0x100         // arbitrary upper bound
+#define RNG_FIFO_NUMVAL_MASK    0xff
+#define RNG_STATUS_NUMVAL_SHIFT 24
 
 /**
   Returns information about the random number generation implementation.
@@ -85,6 +90,54 @@ Bcm2836RngGetInfo (
 }
 
 /**
+  Read a single random value, in either FIFO or regular mode.
+
+  @param[in]  Val                     A pointer to the 32-bit word that is to
+                                      be filled with a random value.
+
+  @retval EFI_SUCCESS                 A random value was successfully read.
+  @retval EFI_NOT_READY               The number of retries elapsed before a
+                                      random value was generated.
+
+**/
+STATIC
+EFI_STATUS
+EFIAPI
+Bcm2836RngReadValue (
+  IN OUT  UINT32                  *Val
+)
+{
+  UINT32 Avail;
+  UINT32 i;
+  BOOLEAN UseFifo = FixedPcdGetBool (PcdBcm283xRngUseFifo);
+
+  ASSERT (Val != NULL);
+
+  Avail = (UseFifo) ?
+    (MmioRead32 (RNG_FIFO_COUNT) & RNG_FIFO_NUMVAL_MASK) :
+    (MmioRead32 (RNG_STATUS) >> RNG_STATUS_NUMVAL_SHIFT);
+
+  //
+  // If we don't have a value ready, wait 1 us and retry.
+  //
+  for (i = 0; Avail < 1 && i < RNG_MAX_RETRIES; i++) {
+    MicroSecondDelay (1);
+    Avail = (UseFifo) ?
+      (MmioRead32 (RNG_FIFO_COUNT) & RNG_FIFO_NUMVAL_MASK) :
+      (MmioRead32 (RNG_STATUS) >> RNG_STATUS_NUMVAL_SHIFT);
+  }
+  if (Avail < 1) {
+    return EFI_NOT_READY;
+  }
+
+  *Val = (UseFifo) ?
+    MmioRead32 (RNG_FIFO_DATA):
+    MmioRead32 (RNG_DATA);
+
+  return EFI_SUCCESS;
+}
+
+/**
   Produces and returns an RNG value using either the default or specified RNG
   algorithm.
 
@@ -123,9 +176,8 @@ Bcm2836RngGetRNG (
   OUT UINT8                      *RNGValue
   )
 {
-  UINT32 Val;
-  UINT32 Num;
-  UINT32 Retries;
+  EFI_STATUS      Status;
+  UINT32          Val;
 
   if (This == NULL || RNGValueLength == 0 || RNGValue == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -139,30 +191,24 @@ Bcm2836RngGetRNG (
     return EFI_UNSUPPORTED;
   }
 
-  while (RNGValueLength > 0) {
-    Retries = RNG_MAX_RETRIES;
-    do {
-      Num = MmioRead32 (RNG_STATUS) >> 24;
-      MemoryFence ();
-    } while (!Num && Retries-- > 0);
-
-    if (!Num) {
-      return EFI_DEVICE_ERROR;
+  while (RNGValueLength >= sizeof (UINT32)) {
+    Status = Bcm2836RngReadValue (&Val);
+    if (EFI_ERROR (Status)) {
+      return Status;
     }
+    WriteUnaligned32 ((VOID *)RNGValue, Val);
+    RNGValue += sizeof (UINT32);
+    RNGValueLength -= sizeof (UINT32);
+  }
 
-    while (RNGValueLength >= sizeof (UINT32) && Num > 0) {
-      WriteUnaligned32 ((VOID *)RNGValue, MmioRead32 (RNG_DATA));
-      RNGValue += sizeof (UINT32);
-      RNGValueLength -= sizeof (UINT32);
-      Num--;
+  if (RNGValueLength > 0) {
+    Status = Bcm2836RngReadValue (&Val);
+    if (EFI_ERROR (Status)) {
+      return Status;
     }
-
-    if (RNGValueLength > 0 && Num > 0) {
-      Val = MmioRead32 (RNG_DATA);
-      while (RNGValueLength--) {
-        *RNGValue++ = (UINT8)Val;
-        Val >>= 8;
-      }
+    while (RNGValueLength--) {
+      *RNGValue++ = (UINT8)Val;
+      Val >>= 8;
     }
   }
   return EFI_SUCCESS;
@@ -190,7 +236,7 @@ Bcm2836RngEntryPoint (
                   NULL);
   ASSERT_EFI_ERROR (Status);
 
-  MmioWrite32 (RNG_STATUS, RNG_WARMUP_COUNT);
+  MmioWrite32 (RNG_BIT_COUNT_THRESHOLD, RNG_WARMUP_COUNT);
   MmioWrite32 (RNG_CTRL, RNG_CTRL_ENABLE);
 
   return EFI_SUCCESS;

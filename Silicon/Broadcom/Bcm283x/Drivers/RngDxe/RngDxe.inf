@@ -28,6 +28,7 @@
   DebugLib
   IoLib
   PcdLib
+  TimerLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
 
@@ -39,6 +40,7 @@
 
 [FixedPcd]
   gBcm283xTokenSpaceGuid.PcdBcm283xRegistersAddress
+  gBcm283xTokenSpaceGuid.PcdBcm283xRngUseFifo
 
 [Depex]
   TRUE

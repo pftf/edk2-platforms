@@ -24,8 +24,7 @@
 
 /* watchdog constants */
 #define BCM2836_WDOG_OFFSET                                 0x00100000
-#define BCM2836_WDOG_BASE_ADDRESS                           (FixedPcdGet64 (PcdBcm283xRegistersAddress) \
-                                                            + BCM2836_WDOG_OFFSET)
+#define BCM2836_WDOG_BASE_ADDRESS                           (BCM2836_SOC_REGISTERS + BCM2836_WDOG_OFFSET)
 #define BCM2836_WDOG_PASSWORD                               0x5a000000
 #define BCM2836_WDOG_RSTC_OFFSET                            0x0000001c
 #define BCM2836_WDOG_WDOG_OFFSET                            0x00000024
@@ -34,8 +33,7 @@
 
 /* mailbox interface constants */
 #define BCM2836_MBOX_OFFSET                                 0x0000b880
-#define BCM2836_MBOX_BASE_ADDRESS                           (FixedPcdGet64 (PcdBcm283xRegistersAddress) \
-                                                            + BCM2836_MBOX_OFFSET)
+#define BCM2836_MBOX_BASE_ADDRESS                           (BCM2836_SOC_REGISTERS + BCM2836_MBOX_OFFSET)
 #define BCM2836_MBOX_READ_OFFSET                            0x00000000
 #define BCM2836_MBOX_STATUS_OFFSET                          0x00000018
 #define BCM2836_MBOX_CONFIG_OFFSET                          0x0000001c
@@ -51,12 +49,19 @@
 #define BCM2836_INTC_TIMER_PENDING_OFFSET                   0x00000060
 
 /* random number generator */
-#define RNG_BASE_ADDRESS   (BCM2836_SOC_REGISTERS + 0x00104000)
+#define BCM2836_RNG_OFFSET                                  0x00104000
+#define RNG_BASE_ADDRESS                                    (BCM2836_SOC_REGISTERS + BCM2836_RNG_OFFSET)
 
-#define RNG_CTRL           (RNG_BASE_ADDRESS + 0x0)
-#define RNG_STATUS         (RNG_BASE_ADDRESS + 0x4)
-#define RNG_DATA           (RNG_BASE_ADDRESS + 0x8)
+#define RNG_CTRL                                            (RNG_BASE_ADDRESS + 0x0)
+#define RNG_STATUS                                          (RNG_BASE_ADDRESS + 0x4)
+#define RNG_DATA                                            (RNG_BASE_ADDRESS + 0x8)
+#define RNG_BIT_COUNT                                       (RNG_BASE_ADDRESS + 0xc)
+#define RNG_BIT_COUNT_THRESHOLD                             (RNG_BASE_ADDRESS + 0x10)
+#define RNG_INT_STATUS                                      (RNG_BASE_ADDRESS + 0x18)
+#define RNG_INT_ENABLE                                      (RNG_BASE_ADDRESS + 0x1c)
+#define RNG_FIFO_DATA                                       (RNG_BASE_ADDRESS + 0x20)
+#define RNG_FIFO_COUNT                                      (RNG_BASE_ADDRESS + 0x24)
 
-#define RNG_CTRL_ENABLE    0x1
+#define RNG_CTRL_ENABLE                                     0x1
 
 #endif /*__BCM2836_H__ */
