@@ -6,6 +6,8 @@
  *
  **/
 
+#include "IndustryStandard/Bcm2711.h"
+
 Device (XHC0)
 {
     Name (_HID, "PNP0D10")      // _HID: Hardware ID
@@ -31,4 +33,14 @@ Device (XHC0)
           175
         }
     })
+    OperationRegion (PCFG, SystemMemory, PCIE_REG_BASE, 0x10000)
+    Field (PCFG, ByteAcc, NoLock, Preserve) {
+        Offset (PCIE_EXT_CFG_DATA),
+        VPID, 16,
+        CMND, 8,
+        STAT, 8,
+    }
+    Method (_PS0) {
+      Store (0x6, CMND)
+    }
 }
