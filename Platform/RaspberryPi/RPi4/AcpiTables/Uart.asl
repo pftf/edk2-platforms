@@ -13,7 +13,7 @@
 Device (URT0)
 {
   Name (_HID, "BCM2837")
-  Name (_CID, "HID3123")
+  Name (_CID, "ARMH0011")
   Name (_UID, 0x4)
   Name (_CCA, 0x0)
   Method (_STA)
@@ -25,12 +25,12 @@ Device (URT0)
     Name (RBUF, ResourceTemplate ()
     {
       MEMORY32FIXED (ReadWrite, 0xFE201000, 0x1000,)
-      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x59 }
+      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x99 }
     })
     Return (RBUF)
   }
 
-  Name (CLCK, 3000000)
+  Name (CLCK, 48000000)
 
   Name (_DSD, Package ()
   {

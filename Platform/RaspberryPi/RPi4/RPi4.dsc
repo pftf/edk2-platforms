@@ -38,6 +38,7 @@
   DEFINE SECURE_BOOT_ENABLE      = FALSE
   DEFINE INCLUDE_TFTP_COMMAND    = FALSE
   DEFINE DEBUG_PRINT_ERROR_LEVEL = 0x8000004F
+  DEFINE PL011_ENABLE            = TRUE
 
 ################################################################################
 #
@@ -116,10 +117,16 @@
   ArmHvcLib|ArmPkg/Library/ArmHvcLib/ArmHvcLib.inf
   ArmGenericTimerCounterLib|ArmPkg/Library/ArmGenericTimerPhyCounterLib/ArmGenericTimerPhyCounterLib.inf
 
+!if $(PL011_ENABLE) == FALSE
   PciCf8Lib|MdePkg/Library/BasePciCf8Lib/BasePciCf8Lib.inf
   PciLib|MdePkg/Library/BasePciLibCf8/BasePciLibCf8.inf
   PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
   SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
+!else
+  PL011UartClockLib|ArmPlatformPkg/Library/PL011UartClockLib/PL011UartClockLib.inf
+  PL011UartLib|ArmPlatformPkg/Library/PL011UartLib/PL011UartLib.inf
+  SerialPortLib|ArmPlatformPkg/Library/PL011SerialPortLib/PL011SerialPortLib.inf
+!endif
 
   # Cryptographic libraries
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
@@ -391,6 +398,7 @@
   gBcm27xxTokenSpaceGuid.PcdBcm27xxPciBusMmioLen|0x3ffffff
   gBcm27xxTokenSpaceGuid.PcdBcm27xxPciCpuMmioAdr|0x600000000
 
+!if $(PL011_ENABLE) == FALSE
   ## NS16550 compatible UART
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xfe215040
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|TRUE
@@ -398,7 +406,16 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|500000000
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialFifoControl|0x27
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialExtendedTxFifoSize|8
+!else
+  ## PL011 - Serial Terminal
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0xfe201000
+  gArmPlatformTokenSpaceGuid.PL011UartInteger|0
+  gArmPlatformTokenSpaceGuid.PL011UartFractional|0
+  gArmPlatformTokenSpaceGuid.PL011UartClkInHz|48000000
+!endif
+
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate|115200
+  gEfiMdePkgTokenSpaceGuid.PcdUartDefaultReceiveFifoDepth|0
 
   #
   # ARM General Interrupt Controller

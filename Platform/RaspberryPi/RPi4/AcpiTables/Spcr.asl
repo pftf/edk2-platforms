@@ -19,7 +19,7 @@
 [01Ch 0028   4]              Asl Compiler ID : "----"
 [020h 0032   4]        Asl Compiler Revision : 00000000
 
-[024h 0036   1]               Interface Type : 10
+[024h 0036   1]               Interface Type : 03     // 0x03 = PL011, 0x10 = BCM2835
 [025h 0037   3]                     Reserved : 000000
 
 [028h 0040  12]         Serial Port Register : [Generic Address Structure]
@@ -27,16 +27,16 @@
 [029h 0041   1]                    Bit Width : 20
 [02Ah 0042   1]                   Bit Offset : 00
 [02Bh 0043   1]         Encoded Access Width : 03 [DWord Access:32]
-[02Ch 0044   8]                      Address : 00000000FE215000
+[02Ch 0044   8]                      Address : 00000000FE201000
 
-[034h 0052   1]               Interrupt Type : 0E
+[034h 0052   1]               Interrupt Type : 08     // ARMH GIC interrupt
 [035h 0053   1]          PCAT-compatible IRQ : 00
-[036h 0054   4]                    Interrupt : 7D
-[03Ah 0058   1]                    Baud Rate : 07
+[036h 0054   4]                    Interrupt : 99
+[03Ah 0058   1]                    Baud Rate : 07     // 115200
 [03Bh 0059   1]                       Parity : 00
 [03Ch 0060   1]                    Stop Bits : 01
 [03Dh 0061   1]                 Flow Control : 00
-[03Eh 0062   1]                Terminal Type : 00
+[03Eh 0062   1]                Terminal Type : 02     // VT-UTF8
 [04Ch 0076   1]                     Reserved : 00
 [040h 0064   2]                PCI Device ID : FFFF
 [042h 0066   2]                PCI Vendor ID : FFFF
