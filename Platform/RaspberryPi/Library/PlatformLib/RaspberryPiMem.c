@@ -148,6 +148,14 @@ ArmPlatformGetVirtualMemoryMap (
   VirtualMemoryInfo[Index].Type             = RPI_MEM_RESERVED_REGION;
   VirtualMemoryInfo[Index++].Name           = L"SoC Reserved (283x)";
 
+  if (FeaturePcdGet (PcdAcpiBasicMode)) {
+    //
+    // Limit the memory to 3 GB to work around the DMA bugs in the SoC without
+    // having to rely on IORT or _DMA descriptions.
+    //
+    ExtendedMemorySize = MIN(ExtendedMemorySize, 3U * SIZE_1GB);
+  }
+
   ExtendedMemorySize -= SIZE_1GB;
   if (ExtendedMemorySize > 0) {
     VirtualMemoryTable[Index].PhysicalBase  = FixedPcdGet64 (PcdExtendedMemoryBase);

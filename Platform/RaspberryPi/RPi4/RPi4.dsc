@@ -39,6 +39,7 @@
   DEFINE INCLUDE_TFTP_COMMAND    = FALSE
   DEFINE DEBUG_PRINT_ERROR_LEVEL = 0x8000004F
   DEFINE PL011_ENABLE            = TRUE
+  DEFINE ACPI_BASIC_MODE_ENABLE  = TRUE
 
 ################################################################################
 #
@@ -256,6 +257,8 @@
   #  It could be set FALSE to save size.
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutGopSupport|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutUgaSupport|FALSE
+
+  gRaspberryPiTokenSpaceGuid.PcdAcpiBasicMode|$(ACPI_BASIC_MODE_ENABLE)
 
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdMaximumUnicodeStringLength|1000000
@@ -555,12 +558,15 @@
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
   MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
   Platform/RaspberryPi/Drivers/DisplayDxe/DisplayDxe.inf
+  EmbeddedPkg/Drivers/ConsolePrefDxe/ConsolePrefDxe.inf
 
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
 
   ArmPkg/Drivers/ArmGic/ArmGicDxe.inf
   Platform/RaspberryPi/Drivers/RpiFirmwareDxe/RpiFirmwareDxe.inf
+!if $(ACPI_BASIC_MODE_ENABLE) == FALSE
   Platform/RaspberryPi/Drivers/FdtDxe/FdtDxe.inf
+!endif
   Platform/RaspberryPi/Drivers/ConfigDxe/ConfigDxe.inf
   ArmPkg/Drivers/TimerDxe/TimerDxe.inf
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
