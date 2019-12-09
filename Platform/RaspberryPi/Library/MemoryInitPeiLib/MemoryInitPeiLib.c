@@ -78,13 +78,7 @@ AddReservedMemoryRegion (
   IN ARM_MEMORY_REGION_DESCRIPTOR *Desc
   )
 {
-  AddBasicMemoryRegion (Desc);
-
-  BuildMemoryAllocationHob (
-    Desc->PhysicalBase,
-    Desc->Length,
-    EfiReservedMemoryType
-  );
+  // do nothing
 }
 
 void (*AddRegion[]) (IN ARM_MEMORY_REGION_DESCRIPTOR *Desc) = {

@@ -123,18 +123,11 @@ ArmPlatformGetVirtualMemoryMap (
   // Compute the amount of extended RAM available on this platform
   ExtendedMemorySize = SIZE_256MB;
   ExtendedMemorySize <<= (mBoardRevision >> 20) & 0x07;
-  ExtendedMemorySize -= SIZE_1GB;
-  if (ExtendedMemorySize > 0) {
-    VirtualMemoryTable[Index].PhysicalBase  = FixedPcdGet64 (PcdExtendedMemoryBase);
-    VirtualMemoryTable[Index].VirtualBase   = VirtualMemoryTable[Index].PhysicalBase;
-    VirtualMemoryTable[Index].Length        = ExtendedMemorySize;
-    VirtualMemoryTable[Index].Attributes    = ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK;
-    VirtualMemoryInfo[Index].Type           = RPI_MEM_BASIC_REGION;
-    VirtualMemoryInfo[Index++].Name         = L"Extended System RAM";
-  }
+  ExtendedMemorySize = MIN(ExtendedMemorySize, BCM2836_SOC_REGISTERS);
 
   // Extended SoC registers (PCIe, genet, ...)
   if (BCM2711_SOC_REGISTERS > 0) {
+    ExtendedMemorySize                      = MIN(ExtendedMemorySize, BCM2711_SOC_REGISTERS);
     VirtualMemoryTable[Index].PhysicalBase  = BCM2711_SOC_REGISTERS;
     VirtualMemoryTable[Index].VirtualBase   = VirtualMemoryTable[Index].PhysicalBase;
     VirtualMemoryTable[Index].Length        = BCM2711_SOC_REGISTER_LENGTH;
@@ -154,6 +147,16 @@ ArmPlatformGetVirtualMemoryMap (
   VirtualMemoryTable[Index].Attributes      = ARM_MEMORY_REGION_ATTRIBUTE_DEVICE;
   VirtualMemoryInfo[Index].Type             = RPI_MEM_RESERVED_REGION;
   VirtualMemoryInfo[Index++].Name           = L"SoC Reserved (283x)";
+
+  ExtendedMemorySize -= SIZE_1GB;
+  if (ExtendedMemorySize > 0) {
+    VirtualMemoryTable[Index].PhysicalBase  = FixedPcdGet64 (PcdExtendedMemoryBase);
+    VirtualMemoryTable[Index].VirtualBase   = VirtualMemoryTable[Index].PhysicalBase;
+    VirtualMemoryTable[Index].Length        = ExtendedMemorySize;
+    VirtualMemoryTable[Index].Attributes    = ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK;
+    VirtualMemoryInfo[Index].Type           = RPI_MEM_BASIC_REGION;
+    VirtualMemoryInfo[Index++].Name         = L"Extended System RAM";
+  }
 
   // End of Table
   VirtualMemoryTable[Index].PhysicalBase    = 0;
