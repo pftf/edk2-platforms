@@ -624,7 +624,7 @@
   #
   # RNG
   #
-  Silicon/Broadcom/Bcm283x/Drivers/RngDxe/RngDxe.inf
+  Silicon/Broadcom/Bcm283x/Drivers/Bcm2838RngDxe/Bcm2838RngDxe.inf
 
   #
   # PCI Support
