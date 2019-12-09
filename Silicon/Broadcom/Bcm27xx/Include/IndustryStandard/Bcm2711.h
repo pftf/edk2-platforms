@@ -19,7 +19,7 @@
 #define PCIE_BRIDGE_MMIO_LEN                                (FixedPcdGet32 (PcdBcm27xxPciBusMmioLen))
 
 /* PCI root bridge control registers location */
-#define PCIE_REG_BASE                                       (FixedPcdGet32 (PcdBcm27xxPciRegBase))
+#define PCIE_REG_BASE                                       FixedPcdGet32 (PcdBcm27xxPciRegBase)
 #define PCIE_REG_LIMIT                                      0x9310
 
 /* PCI root bridge control registers */
