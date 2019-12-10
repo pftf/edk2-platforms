@@ -15,7 +15,7 @@
 
 /* Generic PCI addresses */
 #define PCIE_TOP_OF_MEM_WIN                                 (FixedPcdGet64 (PcdBcm27xxPciBusMmioAdr))
-#define PCIE_CPU_MMIO_WINDOW                                (FixedPcdGet64 (PcdBcm27xxPciCpuMmioAdr))
+#define PCIE_CPU_MMIO_WINDOW                                FixedPcdGet64 (PcdBcm27xxPciCpuMmioAdr)
 #define PCIE_BRIDGE_MMIO_LEN                                (FixedPcdGet32 (PcdBcm27xxPciBusMmioLen))
 
 /* PCI root bridge control registers location */

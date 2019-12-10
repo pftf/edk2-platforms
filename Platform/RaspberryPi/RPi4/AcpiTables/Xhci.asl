@@ -1,6 +1,7 @@
 /** @file
  *
  *  Copyright (c) 2019 Linaro, Limited. All rights reserved.
+ *  Copyright (c) 2019 Andrei Warkentin <andrey.warkentin@gmail.com>
  *
  *  SPDX-License-Identifier: BSD-2-Clause-Patent
  *
@@ -8,35 +9,51 @@
 
 #include <IndustryStandard/Bcm2711.h>
 
+/*
+ * According to UEFI boot log for the VLI device on Pi 4.
+ */
+#define XHCI_REG_LENGTH 0x1000
+
 Device (XHC0)
 {
     Name (_HID, "PNP0D10")      // _HID: Hardware ID
     Name (_UID, 0x0)            // _UID: Unique ID
     Name (_CCA, 0x0)            // _CCA: Cache Coherency Attribute
 
-    Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
-    {
-        QWordMemory(ResourceConsumer,
-            ,
-            MinFixed,
-            MaxFixed,
-            NonCacheable,
-            ReadWrite,
-            0x0,
-            0x600000000,
-            0x600003fff,
-            0x0,
-            0x4000
-            )
-        Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, )
-        {
-          175
-        }
-    })
+    Method (_CRS, 0, Serialized) { // _CRS: Current Resource Settings
+        Name (RBUF, ResourceTemplate () {
+            QWordMemory(ResourceConsumer,
+                ,
+                MinFixed,
+                MaxFixed,
+                NonCacheable,
+                ReadWrite,
+                0x0,
+                0xAAAA, // MIN
+                0xBBBA, // MAX
+                0x0,
+                0x1111, // LEN
+                ,
+                ,
+                MMIO
+                )
+            Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, ) {
+                175
+            }
+        })
+        CreateQwordField (RBUF, MMIO._MIN, MMBA)
+        CreateQwordField (RBUF, MMIO._MAX, MMBE)
+        CreateQwordField (RBUF, MMIO._LEN, MMLE)
+        Store (PCIE_CPU_MMIO_WINDOW, MMBA)
+        Store (PCIE_CPU_MMIO_WINDOW, MMBE)
+        Store (XHCI_REG_LENGTH, MMLE)
+        Add (MMBA, MMLE, MMBE)
+        Return (RBUF)
+    }
 
-    OperationRegion (PCFG, SystemMemory, PCIE_REG_BASE, 0x10000)
+    OperationRegion (PCFG, SystemMemory, PCIE_REG_BASE + PCIE_EXT_CFG_DATA, 0x1000)
     Field (PCFG, AnyAcc, NoLock, Preserve) {
-        Offset (PCIE_EXT_CFG_DATA),
+        Offset (0),
         VNID, 16, // Vendor ID
         DVID, 16, // Device ID
         CMND, 16, // Command register
