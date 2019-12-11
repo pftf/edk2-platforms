@@ -26,7 +26,7 @@
 [Sources]
   AcpiTables.h
   Madt.aslc
-  Fadt.aslc
+  Fadt.asl
   Dbg2.aslc
   Gtdt.aslc
   Dsdt.asl
