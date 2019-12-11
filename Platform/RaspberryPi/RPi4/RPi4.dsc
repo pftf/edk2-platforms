@@ -41,6 +41,18 @@
   DEFINE PL011_ENABLE            = FALSE
   DEFINE ACPI_BASIC_MODE_ENABLE  = FALSE
 
+!ifndef TFA_BUILD_ARTIFACT
+#
+# Usually we use the checked-in binaries, but for developers
+# and CI testing being able to use a local build is paramount.
+#
+!if $(PL011_ENABLE) == TRUE
+DEFINE TFA_BUILD_ARTIFACT = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmware/bl31_pl011.bin
+!else
+DEFINE TFA_BUILD_ARTIFACT = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmware/bl31_miniuart.bin
+!endif
+!endif
+
 ################################################################################
 #
 # Library Class section - list of all Library Classes needed by this Platform.
