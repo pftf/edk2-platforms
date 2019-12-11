@@ -22,6 +22,11 @@
 #define DBG2_NUMBER_OF_GENERIC_ADDRESS_REGISTERS    1
 #define DBG2_NAMESPACESTRING_FIELD_SIZE             10
 
+#ifdef PL011_ENABLE
+#define UART_BASE_ADDRESS                           FixedPcdGet64 (PcdSerialRegisterBase)
+#define UART_LENGTH                                 0x1000
+#define UART_STR                                    { '\\', '_', 'S', 'B', '.', 'U', 'R', 'T', '0', 0x00 }
+#else
 //
 // When using the miniUART, PcdSerialRegisterBase points to the 8250 base address,
 // which is offset by 0x40 from the actual Bcm2835 base address
@@ -30,6 +35,7 @@
 #define UART_LENGTH                                 0x70
 // UART_STR should match the value used Uart.asl
 #define UART_STR                                    { '\\', '_', 'S', 'B', '.', 'U', 'R', 'T', 'M', 0x00 }
+#endif
 
 typedef struct {
   EFI_ACPI_DBG2_DEBUG_DEVICE_INFORMATION_STRUCT     Dbg2Device;
