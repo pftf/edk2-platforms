@@ -11,12 +11,13 @@
  **/
 
 #include <Base.h>
-
+#include <Uefi.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
 #include <Library/PcdLib.h>
 #include <Library/PciSegmentLib.h>
+#include <Library/UefiLib.h>
 #include <IndustryStandard/Bcm2711.h>
 
 typedef enum {
@@ -48,6 +49,12 @@ typedef enum {
 **/
 #define ASSERT_INVALID_PCI_SEGMENT_ADDRESS(A,M) \
   ASSERT (((A) & (0xffff0000f0000000ULL | (M))) == 0)
+
+/**
+  Given the nature of how we access PCI devices, we ensure that
+  read/write accesses are serialized through the use of a lock.
+**/
+EFI_LOCK mPciSegmentReadWriteLock = EFI_INITIALIZE_LOCK_VARIABLE (TPL_HIGH_LEVEL);
 
 /**
   Internal worker function to obtain config space base address.
@@ -115,10 +122,13 @@ PciSegmentLibReadWorker (
   UINT64    Base;
   UINT64    Ret = 0;
 
+  EfiAcquireLock (&mPciSegmentReadWriteLock);
   Base = PciSegmentLibGetConfigBase (Address);
 
-  if (Base==0xFFFFFFFF)
+  if (Base == 0xFFFFFFFF) {
+    EfiReleaseLock (&mPciSegmentReadWriteLock);  
     return Base;
+  }
 
   switch (Width) {
   case PciCfgWidthUint8:
@@ -133,6 +143,7 @@ PciSegmentLibReadWorker (
   default:
     ASSERT (FALSE);
   }
+  EfiReleaseLock (&mPciSegmentReadWriteLock);  
   return Ret;
 }
 
@@ -157,6 +168,7 @@ PciSegmentLibWriteWorker (
 {
   UINT64    Base;
 
+  EfiAcquireLock (&mPciSegmentReadWriteLock);
   Base = PciSegmentLibGetConfigBase (Address);
 
   switch (Width) {
@@ -172,6 +184,7 @@ PciSegmentLibWriteWorker (
   default:
     ASSERT (FALSE);
   }
+  EfiReleaseLock (&mPciSegmentReadWriteLock);
   return Data;
 }
 

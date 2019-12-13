@@ -29,6 +29,7 @@
   DebugLib
   IoLib
   PcdLib
+  UefiLib
 
 [FixedPcd]
   gBcm27xxTokenSpaceGuid.PcdBcm27xxPciRegBase
