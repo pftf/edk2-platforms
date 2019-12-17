@@ -18,12 +18,19 @@
 
 #define RPI_UART_FLOW_CONTROL_NONE           0
 
+#ifdef PL011_ENABLE
+#define RPI_UART_INTERFACE_TYPE              EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_INTERFACE_TYPE_ARM_PL011_UART
+#define RPI_UART_BASE_ADDRESS                FixedPcdGet64 (PcdSerialRegisterBase)
+#define RPI_UART_INTERRUPT                   0x99
+#else
+#define RPI_UART_INTERFACE_TYPE              EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_INTERFACE_TYPE_BCM2835_UART
 //
 // When using the miniUART, PcdSerialRegisterBase points to the 8250 base address,
 // which is offset by 0x40 from the actual Bcm2835 base address
 //
 #define RPI_UART_BASE_ADDRESS                (FixedPcdGet64 (PcdSerialRegisterBase) - 0x40)
 #define RPI_UART_INTERRUPT                   0x7D
+#endif
 
 STATIC EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE Spcr = {
   ACPI_HEADER (
@@ -32,7 +39,7 @@ STATIC EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE Spcr = {
     EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_REVISION
   ),
   // UINT8                                   InterfaceType;
-  EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_INTERFACE_TYPE_BCM2835_UART,
+  RPI_UART_INTERFACE_TYPE,
   // UINT8                                   Reserved1[3];
   {
     EFI_ACPI_RESERVED_BYTE,
