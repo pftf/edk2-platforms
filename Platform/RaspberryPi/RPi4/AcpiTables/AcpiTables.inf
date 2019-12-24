@@ -33,6 +33,7 @@
   Dsdt.asl
   Csrt.aslc
   Spcr.aslc
+  Pcie.asl
 
 [Packages]
   ArmPkg/ArmPkg.dec

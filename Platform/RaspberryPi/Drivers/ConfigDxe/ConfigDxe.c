@@ -12,20 +12,27 @@
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
 #include <Library/AcpiLib.h>
+#include <Library/BaseMemoryLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/DevicePathLib.h>
+#include <Library/UefiLib.h>
+#include <IndustryStandard/Pci.h>
 #include <IndustryStandard/RpiMbox.h>
 #include <IndustryStandard/Bcm2836.h>
 #include <IndustryStandard/Bcm2836Gpio.h>
 #include <Library/GpioLib.h>
 #include <Protocol/RpiFirmware.h>
+#include <Protocol/PciIo.h>
+#include <Guid/EventGroup.h>
 #include "ConfigDxeFormSetGuid.h"
 
 extern UINT8 ConfigDxeHiiBin[];
 extern UINT8 ConfigDxeStrings[];
 
+STATIC UINT32 mModelFamily = 0;
 STATIC RASPBERRY_PI_FIRMWARE_PROTOCOL *mFwProtocol;
+STATIC VOID *mPciIoNotificationRegistration = NULL;
 
 /*
  * The GUID inside Platform/RaspberryPi/RPi3/AcpiTables/AcpiTables.inf and
@@ -222,7 +229,6 @@ ApplyVariables (
   UINT32 CpuClock = PcdGet32 (PcdCpuClock);
   UINT32 CustomCpuClock = PcdGet32 (PcdCustomCpuClock);
   UINT32 Rate = 0;
-  UINT32 ModelFamily = 0;
 
   if (CpuClock != 0) {
     if (CpuClock == 2) {
@@ -256,15 +262,7 @@ ApplyVariables (
     DEBUG ((DEBUG_INFO, "Current CPU speed is %uHz\n", Rate));
   }
 
-  Status = mFwProtocol->GetModelFamily (&ModelFamily);
-  if (Status != EFI_SUCCESS) {
-    DEBUG ((DEBUG_ERROR, "Couldn't get the Raspberry Pi model family: %r\n", Status));
-  } else {
-    DEBUG ((DEBUG_INFO, "Current Raspberry Pi model family is 0x%x\n", ModelFamily));
-  }
-
-
-  if (ModelFamily == 3) {
+  if (mModelFamily == 3) {
     /*
      * Pi 3: either Arasan or SdHost goes to SD card.
      *
@@ -314,7 +312,7 @@ ApplyVariables (
     GpioPinFuncSet (52, Gpio48Group);
     GpioPinFuncSet (53, Gpio48Group);
 
-  } else if (ModelFamily == 4) {
+  } else if (mModelFamily == 4) {
     /*
      * Pi 4: either Arasan or eMMC2 goes to SD card.
      */
@@ -350,7 +348,7 @@ ApplyVariables (
       GpioPinFuncSet (39, GPIO_FSEL_ALT3);
     }
   } else {
-    DEBUG ((DEBUG_ERROR, "Model Family %d not supported...\n", ModelFamily));
+    DEBUG ((DEBUG_ERROR, "Model Family %d not supported...\n", mModelFamily));
   }
 
   /*
@@ -383,6 +381,67 @@ ApplyVariables (
 
 
 EFI_STATUS
+AllocateFakeECAM (
+  IN  EFI_HANDLE ImageHandle, 
+  OUT EFI_PHYSICAL_ADDRESS *Base
+  )
+{
+  *Base = 0x400000;
+  SetMem ((VOID *) *Base, 0x100000, 0xff);
+
+  return EFI_SUCCESS;
+}
+
+
+STATIC
+VOID
+PciIoNotificationEvent (
+  IN EFI_EVENT  Event,
+  IN VOID       *Context
+  )
+{
+  EFI_STATUS            Status;
+  EFI_PCI_IO_PROTOCOL   *PciIo;
+  UINT32 DevicePciId;
+  EFI_PHYSICAL_ADDRESS FakeECAM = (EFI_PHYSICAL_ADDRESS) Context;
+
+  Status = gBS->LocateProtocol (&gEfiPciIoProtocolGuid,
+                  mPciIoNotificationRegistration, (VOID **)&PciIo);
+  if (EFI_ERROR (Status)) {
+    return;
+  }
+
+  Status = PciIo->Pci.Read (
+                        PciIo,
+                        EfiPciIoWidthUint32,
+                        PCI_VENDOR_ID_OFFSET,
+                        1,
+                        &DevicePciId);
+  if (EFI_ERROR (Status)) {
+    return;
+  }
+
+  if (DevicePciId != 0x34831106) {
+    return;
+  }
+
+  DEBUG((DEBUG_ERROR, "Found USB device!\n"));
+  Status = PciIo->Pci.Read (PciIo, EfiPciIoWidthUint32, 0,
+                            0x1000 / 4, (VOID *) FakeECAM);
+  ASSERT_EFI_ERROR (Status);
+
+  // Mark as already enabled. Actual enable is done by _INI method
+  // for PCI0.
+  *(UINT16 *) (FakeECAM + PCI_COMMAND_OFFSET) |= 0x6;
+  *(UINT32 *) (FakeECAM + 0x30) = 0xffffffff;
+
+  // No caps.
+  *(UINT32 *) (FakeECAM + 0x34) = 0x0;
+  gBS->CloseEvent (Event);
+}
+
+
+EFI_STATUS
 EFIAPI
 ConfigInitialize (
   IN EFI_HANDLE ImageHandle,
@@ -396,6 +455,13 @@ ConfigInitialize (
   ASSERT_EFI_ERROR (Status);
   if (EFI_ERROR (Status)) {
     return Status;
+  }
+
+  Status = mFwProtocol->GetModelFamily (&mModelFamily);
+  if (Status != EFI_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "Couldn't get the Raspberry Pi model family: %r\n", Status));
+  } else {
+    DEBUG ((DEBUG_INFO, "Current Raspberry Pi model family is 0x%x\n", mModelFamily));
   }
 
   Status = SetupVariables ();
@@ -413,6 +479,19 @@ ConfigInitialize (
   Status = InstallHiiPages ();
   if (Status != EFI_SUCCESS) {
     DEBUG ((DEBUG_ERROR, "Couldn't install ConfigDxe configuration pages: %r\n", Status));
+  }
+
+  if (mModelFamily == 4) {
+    EFI_PHYSICAL_ADDRESS Base;
+    AllocateFakeECAM (ImageHandle, &Base);
+    
+    EfiCreateProtocolNotifyEvent (
+      &gEfiPciIoProtocolGuid,
+      TPL_NOTIFY,
+      PciIoNotificationEvent,
+      (VOID *) Base,
+      &mPciIoNotificationRegistration
+      );
   }
 
   Status = LocateAndInstallAcpiFromFv (&mAcpiTableFile);

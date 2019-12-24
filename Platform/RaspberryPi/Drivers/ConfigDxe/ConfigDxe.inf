@@ -40,7 +40,7 @@
 [LibraryClasses]
   BaseLib
   DebugLib
-  DxeServicesTableLib
+  BaseMemoryLib
   PcdLib
   UefiBootServicesTableLib
   UefiRuntimeServicesTableLib
@@ -54,6 +54,7 @@
 
 [Protocols]
   gRaspberryPiFirmwareProtocolGuid ## CONSUMES
+  gEfiPciIoProtocolGuid ## CONSUMES
   gRaspberryPiConfigAppliedProtocolGuid ## PRODUCES
 
 [Pcd]

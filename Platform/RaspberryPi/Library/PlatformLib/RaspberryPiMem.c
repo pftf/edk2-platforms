@@ -17,6 +17,8 @@
 #include <IndustryStandard/Bcm2711.h>
 #include <IndustryStandard/Bcm2836.h>
 
+#define ALIGN_DOWN_VALUE(Value, Alignment) ((Value) & ~((Alignment) - 1))
+
 UINT64 mSystemMemoryBase;
 extern UINT64 mSystemMemoryEnd;
 UINT64 mVideoCoreBase;
@@ -25,7 +27,7 @@ UINT32 mBoardRevision;
 
 
 // The total number of descriptors, including the final "end-of-table" descriptor.
-#define MAX_VIRTUAL_MEMORY_MAP_DESCRIPTORS 10
+#define MAX_VIRTUAL_MEMORY_MAP_DESCRIPTORS 11
 
 STATIC BOOLEAN                  VirtualMemoryInfoInitialized = FALSE;
 STATIC RPI_MEMORY_REGION_INFO   VirtualMemoryInfo[MAX_VIRTUAL_MEMORY_MAP_DESCRIPTORS];
@@ -40,6 +42,37 @@ STATIC RPI_MEMORY_REGION_INFO   VirtualMemoryInfo[MAX_VIRTUAL_MEMORY_MAP_DESCRIP
                        VariablesSize)
 
 #define ATFBase (FixedPcdGet64(PcdFdBaseAddress) + FixedPcdGet32(PcdFdSize))
+
+STATIC UINT32
+GetModelFamily (VOID)
+{
+  switch ((mBoardRevision >> 4) & 0xFF) {
+    // www.raspberrypi.org/documentation/hardware/raspberrypi/revision-codes/README.md
+  case 0x00:          // Raspberry Pi Model A
+  case 0x01:          // Raspberry Pi Model B
+  case 0x02:          // Raspberry Pi Model A+
+  case 0x03:          // Raspberry Pi Model B+
+  case 0x06:          // Raspberry Pi Compute Module 1
+  case 0x09:          // Raspberry Pi Zero
+  case 0x0C:          // Raspberry Pi Zero W
+    return 1;
+  case 0x04:          // Raspberry Pi 2 Model B
+    return 2;
+  case 0x08:          // Raspberry Pi 3 Model B
+  case 0x0A:          // Raspberry Pi Compute Module 3
+  case 0x0D:          // Raspberry Pi 3 Model B+
+  case 0x0E:          // Raspberry Pi 3 Model A+
+  case 0x10:          // Raspberry Pi Compute Module 3+
+    return 3;
+      break;
+  case 0x11:          // Raspberry Pi 4 Model B
+    return 4;
+
+  }
+
+  // Unknown.
+  return 0;
+}
 
 /**
   Return the Virtual Memory Map of your platform
@@ -61,6 +94,8 @@ ArmPlatformGetVirtualMemoryMap (
   UINTN                         Index = 0;
   UINTN                         GpuIndex;
   INT64                         SystemMemorySize;
+  UINTN                         BaseMemorySize;
+  UINTN                         BaseMemoryStart;
   ARM_MEMORY_REGION_DESCRIPTOR  *VirtualMemoryTable;
 
   // Early output of the info we got from VideoCore can prove valuable.
@@ -103,10 +138,23 @@ ArmPlatformGetVirtualMemoryMap (
   VirtualMemoryInfo[Index].Type             = RPI_MEM_RESERVED_REGION;
   VirtualMemoryInfo[Index++].Name           = L"TF-A RAM";
 
+  BaseMemoryStart = FixedPcdGet64 (PcdSystemMemoryBase);
+  if (GetModelFamily () == 4) {
+    VirtualMemoryTable[Index].PhysicalBase    = BaseMemoryStart;
+    VirtualMemoryTable[Index].VirtualBase     = VirtualMemoryTable[Index].PhysicalBase;
+    VirtualMemoryTable[Index].Length          = 0x100000;
+    BaseMemoryStart += VirtualMemoryTable[Index].Length;
+    VirtualMemoryTable[Index].Attributes      = ARM_MEMORY_REGION_ATTRIBUTE_DEVICE;
+    VirtualMemoryInfo[Index].Type             = RPI_MEM_UNMAPPED_REGION;
+    VirtualMemoryInfo[Index++].Name           = L"Fake ECAM";
+  }
+
+  BaseMemorySize = mSystemMemoryEnd + 1 - BaseMemoryStart;
+  
   // Base System RAM
-  VirtualMemoryTable[Index].PhysicalBase    = FixedPcdGet64 (PcdSystemMemoryBase);
+  VirtualMemoryTable[Index].PhysicalBase    = BaseMemoryStart;
   VirtualMemoryTable[Index].VirtualBase     = VirtualMemoryTable[Index].PhysicalBase;
-  VirtualMemoryTable[Index].Length          = mSystemMemoryEnd + 1 - FixedPcdGet64 (PcdSystemMemoryBase);
+  VirtualMemoryTable[Index].Length          = BaseMemorySize;
   VirtualMemoryTable[Index].Attributes      = ARM_MEMORY_REGION_ATTRIBUTE_WRITE_BACK;
   VirtualMemoryInfo[Index].Type             = RPI_MEM_BASIC_REGION;
   VirtualMemoryInfo[Index++].Name           = L"Base System RAM";
