@@ -208,7 +208,7 @@ DefinitionBlock ("Dsdt.aml", "DSDT", 5, "MSFT", "EDK2", 2)
             0x0,
             0xc0000000, // MIN
             0xffffffff, // MAX
-            0x40000000, // TRA
+            0xffffffff40000000, // TRA
             0x40000000, // LEN
             ,
             ,
