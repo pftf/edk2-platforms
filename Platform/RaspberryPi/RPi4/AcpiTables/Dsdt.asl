@@ -20,7 +20,6 @@ DefinitionBlock ("Dsdt.aml", "DSDT", 5, "MSFT", "EDK2", 2)
 {
   Scope (\_SB_)
   {
-    include ("Sdhc.asl")
     include ("Pep.asl")
     include ("Xhci.asl")
 
@@ -64,468 +63,158 @@ DefinitionBlock ("Dsdt.aml", "DSDT", 5, "MSFT", "EDK2", 2)
       }
     }
 
-    // DWC OTG Controller
-    Device (USB0)
-    {
-      Name (_HID, "BCM2848")
-      Name (_CID, Package() { "DWC_OTG", "DWC2_OTG"})
-      Name (_UID, 0x0)
-      Name (_CCA, 0x0)
-      Method (_STA)
-      {
-        Return (0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          MEMORY32FIXED(ReadWrite, 0xFE980000, 0x10000,)
-
-          // Validated on Pi 4
-          Interrupt(ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x69 }
-        })
-        Return(RBUF)
-      }
-    }
-
-    // Video Core 4 GPU
-    Device (GPU0)
-    {
-      Name (_HID, "BCM2850")
-      Name (_CID, "VC4")
-      Name (_UID, 0x0)
-      Name (_CCA, 0x0)
-      Method (_STA)
-      {
-        Return(0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          // Memory and interrupt for the GPU.
-
-          // FIXME: interrupts wrong for Pi 4.
-
-          MEMORY32FIXED(ReadWrite, 0xFEC00000, 0x1000,)
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x2A }
-
-          // HVS - Hardware Video Scalar
-          MEMORY32FIXED (ReadWrite, 0xFE400000, 0x6000,)
-          // The HVS interrupt is reserved by the VPU
-          // Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x41 }
-
-          // PixelValve0 - DSI0 or DPI
-          // MEMORY32FIXED (ReadWrite, 0xFE206000, 0x100,)
-          // Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x4D }
-
-          // PixelValve1 - DS1 or SMI
-          // MEMORY32FIXED (ReadWrite, 0xFE207000, 0x100,)
-          // Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x4E }
-
-          // PixelValve2 - HDMI output - connected to HVS display FIFO 1
-          MEMORY32FIXED (ReadWrite, 0xFE807000, 0x100,)
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x4A }
-
-          // HDMI registers
-          MEMORY32FIXED (ReadWrite, 0xFE902000, 0x600,)   // HDMI registers
-          MEMORY32FIXED (ReadWrite, 0xFE808000, 0x100,)   // HD registers
-          // hdmi_int[0]
-          // Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x48 }
-          // hdmi_int[1]
-          // Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x49 }
-
-          // HDMI DDC connection
-          I2CSerialBus (0x50,, 100000,, "\\_SB.I2C2",,,,)  // EDID
-          I2CSerialBus (0x30,, 100000,, "\\_SB.I2C2",,,,)  // E-DDC Segment Pointer
-        })
-        Return(RBUF)
-      }
-
-      // GPU Power Management Component Data
-      // Reference : https://github.com/Microsoft/graphics-driver-samples/wiki/Install-Driver-in-a-Windows-VM
-      Method (PMCD, 0, Serialized)
-      {
-        Name (RBUF, Package ()
-        {
-          1,                  // Version
-          1,                  // Number of graphics power components
-          Package ()          // Power components package
-          {
-            Package ()        // GPU component package
-            {
-              0,              // Component Index
-              0,              // DXGK_POWER_COMPONENT_MAPPING.ComponentType (0 = DXGK_POWER_COMPONENT_ENGINE)
-              0,              // DXGK_POWER_COMPONENT_MAPPING.NodeIndex
-
-              Buffer ()       // DXGK_POWER_RUNTIME_COMPONENT.ComponentGuid
-              {               // 9B2D1E26-1575-4747-8FC0-B9EB4BAA2D2B
-                0x26, 0x1E, 0x2D, 0x9B, 0x75, 0x15, 0x47, 0x47,
-                0x8f, 0xc0, 0xb9, 0xeb, 0x4b, 0xaa, 0x2d, 0x2b
-              },
-
-              "VC4_Engine_00",// DXGK_POWER_RUNTIME_COMPONENT.ComponentName
-              2,              // DXGK_POWER_RUNTIME_COMPONENT.StateCount
-
-              Package ()      // DXGK_POWER_RUNTIME_COMPONENT.States[] package
-              {
-                Package ()   // F0
-                {
-                  0,         // DXGK_POWER_RUNTIME_STATE.TransitionLatency
-                  0,         // DXGK_POWER_RUNTIME_STATE.ResidencyRequirement
-                  1210000,   // DXGK_POWER_RUNTIME_STATE.NominalPower (microwatt)
-                },
-
-                Package ()   // F1 - Placeholder
-                {
-                  10000,     // DXGK_POWER_RUNTIME_STATE.TransitionLatency
-                  10000,     // DXGK_POWER_RUNTIME_STATE.ResidencyRequirement
-                  4,         // DXGK_POWER_RUNTIME_STATE.NominalPower
-                },
-              }
-            }
-          }
-        })
-        Return (RBUF)
-      }
-    }
-
-    // PiQ Mailbox Driver
-    Device (RPIQ)
-    {
-      Name (_HID, "BCM2849")
-      Name (_CID, "RPIQ")
-      Name (_UID, 0)
-      Name (_CCA, 0x0)
-      Method (_STA)
-      {
-        Return (0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          Memory32Fixed (ReadWrite, 0xFE00B880, 0x00000024,)
-
-          // Validated on Pi 4
-          Interrupt(ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x41 }
-        })
-        Return (RBUF)
-      }
-    }
-
-    // VCHIQ Driver
-    Device (VCIQ)
-    {
-      Name (_HID, "BCM2835")
-      Name (_CID, "VCIQ")
-      Name (_UID, 0)
-      Name (_CCA, 0x0)
-      Name (_DEP, Package() { \_SB.RPIQ })
-      Method (_STA)
-      {
-         Return (0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          Memory32Fixed (ReadWrite, 0xFE00B840, 0x00000010,)
-
-          // Validated on Pi 4
-          Interrupt(ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x42 }
-        })
-        Return (RBUF)
-      }
-    }
-
-    // VC Shared Memory Driver
-    Device (VCSM)
-    {
-      Name (_HID, "BCM2856")
-      Name (_CID, "VCSM")
-      Name (_UID, 0)
-      Name (_CCA, 0x0)
-      Name (_DEP, Package() { \_SB.VCIQ })
-      Method (_STA)
-      {
-        Return (0xf)
-      }
-    }
-
-    // Description: GPIO
-    Device (GPI0)
-    {
-      Name (_HID, "BCM2845")
-      Name (_CID, "BCMGPIO")
-      Name (_UID, 0x0)
-      Name (_CCA, 0x0)
-      Method (_STA)
-      {
-        Return(0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          MEMORY32FIXED (ReadWrite, 0xFE200000, 0xB4, )
-
-          // Validated on Pi 4
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Shared) { 0x91 }
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Shared) { 0x92 }
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Shared) { 0x93 }
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Shared) { 0x94 }
-        })
-        Return (RBUF)
-      }
-    }
-
-    // Description: I2C
-    Device (I2C1)
-    {
-      Name (_HID, "BCM2841")
-      Name (_CID, "BCMI2C")
-      Name (_UID, 0x1)
-      Name (_CCA, 0x0)
-      Method (_STA)
-      {
-        Return(0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          Memory32Fixed(ReadWrite, 0xFE804000, 0x20)
-
-          // Validated on Pi 4
-          Interrupt(ResourceConsumer, Level, ActiveHigh, Shared) {0x95}
-
-          //
-          // MsftFunctionConfig is encoded as the VendorLong.
-          //
-          // MsftFunctionConfig (Exclusive, PullUp, BCM_ALT0, "\\_SB.GPI0", 0, ResourceConsumer,) {2, 3}
-          //
-          VendorLong ()      // Length = 0x31
-          {
-            /* 0000 */  0x00, 0x60, 0x44, 0xD5, 0xF3, 0x1F, 0x11, 0x60,  // .`D....`
-            /* 0008 */  0x4A, 0xB8, 0xB0, 0x9C, 0x2D, 0x23, 0x30, 0xDD,  // J...-#0.
-            /* 0010 */  0x2F, 0x8D, 0x1D, 0x00, 0x01, 0x10, 0x00, 0x01,  // /.......
-            /* 0018 */  0x04, 0x00, 0x12, 0x00, 0x00, 0x16, 0x00, 0x20,  // ........
-            /* 0020 */  0x00, 0x00, 0x00, 0x02, 0x00, 0x03, 0x00, 0x5C,  // ........
-            /* 0028 */  0x5F, 0x53, 0x42, 0x2E, 0x47, 0x50, 0x49, 0x30,  // _SB.GPI0
-            /* 0030 */  0x00                                             // .
-          }
-        })
-        Return (RBUF)
-      }
-    }
-
-    // I2C2 is the HDMI DDC connection
-    Device (I2C2)
-    {
-      Name (_HID, "BCM2841")
-      Name (_CID, "BCMI2C")
-      Name (_UID, 0x2)
-      Name (_CCA, 0x0)
-      Method (_STA)
-      {
-        Return (0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate()
-        {
-          Memory32Fixed (ReadWrite, 0xFE805000, 0x20)
-
-          // Validated on Pi 4
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Shared) {0x95}
-        })
-        Return (RBUF)
-      }
-    }
-
-    // SPI
-    Device (SPI0)
-    {
-      Name (_HID, "BCM2838")
-      Name (_CID, "BCMSPI0")
-      Name (_UID, 0x0)
-      Name (_CCA, 0x0)
-      Method (_STA)
-      {
-        Return (0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          MEMORY32FIXED (ReadWrite, 0xFE204000, 0x20,)
-
-          // Validated on Pi 4
-          Interrupt(ResourceConsumer, Level, ActiveHigh, Shared) {0x96}
-
-          //
-          // MsftFunctionConfig is encoded as the VendorLong.
-          //
-          // MsftFunctionConfig (Exclusive, PullDown, BCM_ALT0, "\\_SB.GPI0", 0, ResourceConsumer, ) {9, 10, 11} // MISO, MOSI, SCLK
-          VendorLong ()      // Length = 0x33
-          {
-            /* 0000 */  0x00, 0x60, 0x44, 0xD5, 0xF3, 0x1F, 0x11, 0x60,  // .`D....`
-            /* 0008 */  0x4A, 0xB8, 0xB0, 0x9C, 0x2D, 0x23, 0x30, 0xDD,  // J...-#0.
-            /* 0010 */  0x2F, 0x8D, 0x1F, 0x00, 0x01, 0x10, 0x00, 0x02,  // /.......
-            /* 0018 */  0x04, 0x00, 0x12, 0x00, 0x00, 0x18, 0x00, 0x22,  // ......."
-            /* 0020 */  0x00, 0x00, 0x00, 0x09, 0x00, 0x0A, 0x00, 0x0B,  // ........
-            /* 0028 */  0x00, 0x5C, 0x5F, 0x53, 0x42, 0x2E, 0x47, 0x50,  // .\_SB.GP
-            /* 0030 */  0x49, 0x30, 0x00                                 // I0.
-          }
-
-          //
-          // MsftFunctionConfig is encoded as the VendorLong.
-          //
-          // MsftFunctionConfig (Exclusive, PullUp, BCM_ALT0, "\\_SB.GPI0", 0, ResourceConsumer, ) {8}     // CE0
-          VendorLong ()      // Length = 0x2F
-          {
-            /* 0000 */  0x00, 0x60, 0x44, 0xD5, 0xF3, 0x1F, 0x11, 0x60,  // .`D....`
-            /* 0008 */  0x4A, 0xB8, 0xB0, 0x9C, 0x2D, 0x23, 0x30, 0xDD,  // J...-#0.
-            /* 0010 */  0x2F, 0x8D, 0x1B, 0x00, 0x01, 0x10, 0x00, 0x01,  // /.......
-            /* 0018 */  0x04, 0x00, 0x12, 0x00, 0x00, 0x14, 0x00, 0x1E,  // ........
-            /* 0020 */  0x00, 0x00, 0x00, 0x08, 0x00, 0x5C, 0x5F, 0x53,  // .....\_S
-            /* 0028 */  0x42, 0x2E, 0x47, 0x50, 0x49, 0x30, 0x00         // B.GPI0.
-          }
-
-          //
-          // MsftFunctionConfig is encoded as the VendorLong.
-          //
-          // MsftFunctionConfig (Exclusive, PullUp, BCM_ALT0, "\\_SB.GPI0", 0, ResourceConsumer, ) {7}     // CE1
-          VendorLong ()      // Length = 0x2F
-          {
-            /* 0000 */  0x00, 0x60, 0x44, 0xD5, 0xF3, 0x1F, 0x11, 0x60,  // .`D....`
-            /* 0008 */  0x4A, 0xB8, 0xB0, 0x9C, 0x2D, 0x23, 0x30, 0xDD,  // J...-#0.
-            /* 0010 */  0x2F, 0x8D, 0x1B, 0x00, 0x01, 0x10, 0x00, 0x01,  // /.......
-            /* 0018 */  0x04, 0x00, 0x12, 0x00, 0x00, 0x14, 0x00, 0x1E,  // ........
-            /* 0020 */  0x00, 0x00, 0x00, 0x07, 0x00, 0x5C, 0x5F, 0x53,  // .....\_S
-            /* 0028 */  0x42, 0x2E, 0x47, 0x50, 0x49, 0x30, 0x00         // B.GPI0.
-          }
-        })
-        Return (RBUF)
-      }
-    }
-
-    Device (SPI1)
-    {
-      Name (_HID, "BCM2839")
-      Name (_CID, "BCMAUXSPI")
-      Name (_UID, 0x1)
-      Name (_CCA, 0x0)
-      Name (_DEP, Package() { \_SB.RPIQ })
-      Method (_STA)
-      {
-        Return (0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          MEMORY32FIXED (ReadWrite, 0xFE215080, 0x40,)
-
-          // Validated on Pi 4
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Shared,) {0x7D}
-
-          //
-          // MsftFunctionConfig is encoded as the VendorLong.
-          //
-          // MsftFunctionConfig(Exclusive, PullDown, BCM_ALT4, "\\_SB.GPI0", 0, ResourceConsumer, ) {19, 20, 21} // MISO, MOSI, SCLK
-          VendorLong ()      // Length = 0x33
-          {
-            /* 0000 */  0x00, 0x60, 0x44, 0xD5, 0xF3, 0x1F, 0x11, 0x60,  // .`D....`
-            /* 0008 */  0x4A, 0xB8, 0xB0, 0x9C, 0x2D, 0x23, 0x30, 0xDD,  // J...-#0.
-            /* 0010 */  0x2F, 0x8D, 0x1F, 0x00, 0x01, 0x10, 0x00, 0x02,  // /.......
-            /* 0018 */  0x03, 0x00, 0x12, 0x00, 0x00, 0x18, 0x00, 0x22,  // ......."
-            /* 0020 */  0x00, 0x00, 0x00, 0x13, 0x00, 0x14, 0x00, 0x15,  // ........
-            /* 0028 */  0x00, 0x5C, 0x5F, 0x53, 0x42, 0x2E, 0x47, 0x50,  // .\_SB.GP
-            /* 0030 */  0x49, 0x30, 0x00                                 // I0.
-          }
-
-          //
-          // MsftFunctionConfig is encoded as the VendorLong.
-          //
-          // MsftFunctionConfig(Exclusive, PullDown, BCM_ALT4, "\\_SB.GPI0", 0, ResourceConsumer, ) {16} // CE2
-          VendorLong ()      // Length = 0x2F
-          {
-            /* 0000 */  0x00, 0x60, 0x44, 0xD5, 0xF3, 0x1F, 0x11, 0x60,  // .`D....`
-            /* 0008 */  0x4A, 0xB8, 0xB0, 0x9C, 0x2D, 0x23, 0x30, 0xDD,  // J...-#0.
-            /* 0010 */  0x2F, 0x8D, 0x1B, 0x00, 0x01, 0x10, 0x00, 0x02,  // /.......
-            /* 0018 */  0x03, 0x00, 0x12, 0x00, 0x00, 0x14, 0x00, 0x1E,  // ........
-            /* 0020 */  0x00, 0x00, 0x00, 0x10, 0x00, 0x5C, 0x5F, 0x53,  // .....\_S
-            /* 0028 */  0x42, 0x2E, 0x47, 0x50, 0x49, 0x30, 0x00         // B.GPI0.
-          }
-        })
-        Return (RBUF)
-      }
-    }
-
-    // SPI2 has no pins on GPIO header
-    // Device (SPI2)
-    // {
-    //   Name (_HID, "BCM2839")
-    //   Name (_CID, "BCMAUXSPI")
-    //   Name (_UID, 0x2)
-    //   Name (_CCA, 0x0)
-    //   Name (_DEP, Package() { \_SB.RPIQ })
-    //   Method (_STA)
-    //   {
-    //     Return (0xf)     // Disabled
-    //   }
-    //   Method (_CRS, 0x0, Serialized)
-    //   {
-    //     Name (RBUF, ResourceTemplate ()
-    //     {
-    //       MEMORY32FIXED (ReadWrite, 0xFE2150C0, 0x40,)
     //
-    //       // Validated on Pi 4
-    //       Interrupt (ResourceConsumer, Level, ActiveHigh, Shared,) {0x7D}
-    //     })
-    //     Return (RBUF)
-    //   }
-    // }
-
-    // PWM Driver
-    Device (PWM0)
+    // GPU device container describes the DMA translation required when
+    // a device behind the GPU wants to access Arm memory. Only the first
+    // 1GB can be addressed.
+    //
+    Device (GDV0)
     {
-      Name (_HID, "BCM2844")
-      Name (_CID, "BCM2844")
-      Name (_UID, 0)
+      Name (_HID, "ACPI0004")
+      Name (_UID, 0x1)
       Name (_CCA, 0x0)
-      Method (_STA)
-      {
-        Return (0xf)
-      }
-      Method (_CRS, 0x0, Serialized)
-      {
-        Name (RBUF, ResourceTemplate ()
-        {
-          // DMA channel 11 control
-          Memory32Fixed (ReadWrite, 0xFE007B00, 0x00000100,)
-          // PWM control
-          Memory32Fixed (ReadWrite, 0xFE20C000, 0x00000028,)
-          // PWM control bus
-          Memory32Fixed (ReadWrite, 0x7E20C000, 0x00000028,)
-          // PWM control uncached
-          Memory32Fixed (ReadWrite, 0xFF20C000, 0x00000028,)
-          // PWM clock control
-          Memory32Fixed (ReadWrite, 0xFE1010A0, 0x00000008,)
-          // Interrupt DMA channel 11
 
-          // FIXME: interrupts wrong for Pi 4.
-          Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 0x3B }
-          // DMA channel 11, DREQ 5 for PWM
-          FixedDMA (5, 11, Width32Bit, )
-        })
-        Return (RBUF)
-      }
+      Method (_CRS, 0, Serialized) { // _CRS: Current Resource Settings
+        /*
+         * Container devices with _DMA must have _CRS, meaning GDV0
+         * to provide all resources that GpuDevs.asl consume (except
+         * interrupts).
+         */
+        Name (RBUF, ResourceTemplate () {
+
+          // USB0
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE980000, // MIN
+                0xFE98FFFF, // MAX
+                0x0,
+                0x10000, // LEN
+                ,,)
+
+          // VCHIQ
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE00B840, // MIN
+                0xFE00B84F, // MAX
+                0x0,
+                0x10, // LEN
+                ,,)
+
+          // GPIO
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE200000, // MIN
+                0xFE2000B3, // MAX
+                0x0,
+                0xB4, // LEN
+                ,,)
+
+          // I2C1
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE804000, // MIN
+                0xFE80401F, // MAX
+                0x0,
+                0x20, // LEN
+                ,,)
+
+          // I2C2
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE805000, // MIN
+                0xFE80501F, // MAX
+                0x0,
+                0x20, // LEN
+                ,,)
+
+          // SPI0
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE204000, // MIN
+                0xFE20401F, // MAX
+                0x0,
+                0x20, // LEN
+                ,,)
+
+          // SPI1
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE215080, // MIN
+                0xFE2150BF, // MAX
+                0x0,
+                0x40, // LEN
+                ,,)
+
+          // URT0
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE201000, // MIN
+                0xFE201FFF, // MAX
+                0x0,
+                0x1000, // LEN
+                ,,)
+
+          // URTM
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE215000, // MIN
+                0xFE21506F, // MAX
+                0x0,
+                0x70, // LEN
+                ,,)
+
+          // URTM
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE215000, // MIN
+                0xFE21506F, // MAX
+                0x0,
+                0x70, // LEN
+                ,,)
+
+          // SDC1
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE300000, // MIN
+                0xFE3000FF, // MAX
+                0x0,
+                0x100, // LEN
+                ,,)
+
+          // SDC2
+          QWordMemory(ResourceProducer,,
+                MinFixed, MaxFixed, NonCacheable, ReadWrite, 0x0,
+                0xFE202000, // MIN
+                0xFE2020FF, // MAX
+                0x0,
+                0x100, // LEN
+                ,,)
+
+          })
+          Return (RBUF)
+       }
+
+       Name (_DMA, ResourceTemplate() {
+        /*
+         * Only the first 1GB is available.
+         * CPU 0x0 -> bus 0xc0000000.
+         */
+        QWordMemory(ResourceConsumer,
+            ,
+            MinFixed,
+            MaxFixed,
+            NonCacheable,
+            ReadWrite,
+            0x0,
+            0xc0000000, // MIN
+            0xffffffff, // MAX
+            0x40000000, // TRA
+            0x40000000, // LEN
+            ,
+            ,
+            )
+       })
+       include ("GpuDevs.asl")
     }
-
-    include ("Uart.asl")
-    include ("Rhpx.asl")
   }
 }
