@@ -67,7 +67,7 @@ typedef struct {
 
 typedef struct {
   /*
-   * 0 - uSD slot routed to Broadcom SDHOST.
+   * 0 - uSD slot routed to Broadcom SDHOST on Pi 3 or eMMC2 on Pi 4.
    * 1 - uSD slot routed to Arasan SDHCI.
    */
   UINT32 Routing;
@@ -235,8 +235,13 @@ formset
             prompt      = STRING_TOKEN(STR_CHIPSET_SD_PROMPT),
             help        = STRING_TOKEN(STR_CHIPSET_SD_HELP),
             flags       = NUMERIC_SIZE_4 | INTERACTIVE | RESET_REQUIRED,
+#ifdef RPI_4_ONLY
+            option text = STRING_TOKEN(STR_CHIPSET_SD_ARASAN), value = 1, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_CHIPSET_SD_EMMC2), value = 0, flags = 0;
+#else
             option text = STRING_TOKEN(STR_CHIPSET_SD_ARASAN), value = 1, flags = 0;
             option text = STRING_TOKEN(STR_CHIPSET_SD_SDHOST), value = 0, flags = DEFAULT;
+#endif
         endoneof;
     endform;
 

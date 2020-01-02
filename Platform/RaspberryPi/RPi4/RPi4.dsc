@@ -248,6 +248,10 @@ DEFINE TFA_BUILD_ARTIFACT = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmwar
 ###################################################################################################
 
 [BuildOptions]
+  GCC:*_*_*_CC_FLAGS          = -DRPI_4_ONLY
+  GCC:*_*_*_ASLPP_FLAGS       = -DRPI_4_ONLY
+  GCC:*_*_*_ASLCC_FLAGS       = -DRPI_4_ONLY
+  GCC:*_*_*_VFRPP_FLAGS       = -DRPI_4_ONLY
   GCC:*_*_AARCH64_DLINK_FLAGS = -Wl,--fix-cortex-a53-843419
   GCC:RELEASE_*_*_CC_FLAGS    = -DMDEPKG_NDEBUG -DNDEBUG
 
