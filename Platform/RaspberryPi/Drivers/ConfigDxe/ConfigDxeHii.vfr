@@ -67,6 +67,18 @@ typedef struct {
 
 typedef struct {
   /*
+   * Always set by ConfigDxe prior to HII init to reflect
+   * platform capability.
+   */
+  UINT8 Supported;
+} CHIPSET_PI_4GB_SUPPORTED_VARSTORE_DATA;
+
+typedef struct {
+  UINT8 Enabled;
+} CHIPSET_PI_4GB_ENABLED_VARSTORE_DATA;
+
+typedef struct {
+  /*
    * 0 - uSD slot routed to Broadcom SDHOST on Pi 3 or eMMC2 on Pi 4.
    * 1 - uSD slot routed to Arasan SDHCI.
    */
@@ -138,6 +150,16 @@ formset
     efivarstore CHIPSET_SD_VARSTORE_DATA,
       attribute = EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
       name  = SdIsArasan,
+      guid  = CONFIGDXE_FORM_SET_GUID;
+
+    efivarstore CHIPSET_PI_4GB_SUPPORTED_VARSTORE_DATA,
+      attribute = EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+      name  = Pi4GBSupported,
+      guid  = CONFIGDXE_FORM_SET_GUID;
+
+    efivarstore CHIPSET_PI_4GB_ENABLED_VARSTORE_DATA,
+      attribute = EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+      name  = Pi4GBEnabled,
       guid  = CONFIGDXE_FORM_SET_GUID;
 
     efivarstore MMC_DISMULTI_VARSTORE_DATA,
@@ -229,6 +251,16 @@ formset
               maximum = 1600,
               default = 600,
           endnumeric;
+        endif;
+
+        grayoutif ideqval Pi4GBSupported.Supported == 0;
+          oneof varid = Pi4GBEnabled.Enabled,
+              prompt      = STRING_TOKEN(STR_CHIPSET_4GB_PROMPT),
+              help        = STRING_TOKEN(STR_CHIPSET_4GB_HELP),
+              flags       = NUMERIC_SIZE_1 | INTERACTIVE | RESET_REQUIRED,
+              option text = STRING_TOKEN(STR_CHIPSET_4GB_OFF), value = 0, flags = DEFAULT;
+              option text = STRING_TOKEN(STR_CHIPSET_4GB_ON), value = 1, flags = 0;
+          endoneof;
         endif;
 
         oneof varid = SdIsArasan.Routing,

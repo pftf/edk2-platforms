@@ -495,6 +495,12 @@ DEFINE TFA_BUILD_ARTIFACT = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmwar
   gRaspberryPiTokenSpaceGuid.PcdDisplayEnableSShot|L"DisplayEnableSShot"|gConfigDxeFormSetGuid|0x0|1
 
   #
+  # Supporting > 3GB of memory.
+  #
+  gRaspberryPiTokenSpaceGuid.PcdPi4GBSupported|L"Pi4GBSupported"|gConfigDxeFormSetGuid|0x0|0
+  gRaspberryPiTokenSpaceGuid.PcdPi4GBEnabled|L"Pi4GBEnabled"|gConfigDxeFormSetGuid|0x0|0
+
+  #
   # Common UEFI ones.
   #
 
