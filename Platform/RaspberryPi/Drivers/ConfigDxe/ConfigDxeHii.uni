@@ -30,6 +30,11 @@
 #string STR_CHIPSET_CUSTOM_CPU_CLOCK_PROMPT #language en-US "CPU Clock Rate (MHz)"
 #string STR_CHIPSET_CUSTOM_CPU_CLOCK_HELP   #language en-US "Adjust the CPU speed.\nMin value: 100 MHz\nMax value: 1600 MHz\n\nWarning: Overclocking can make the system unbootable!"
 
+#string STR_CHIPSET_4GB_PROMPT       #language en-US "Max RAM Limit"
+#string STR_CHIPSET_4GB_HELP         #language en-US "OS not supporting ACPI DMA constraints require 3GB limit or face broken xHCI USB"
+#string STR_CHIPSET_4GB_OFF          #language en-US "3GB Limit"
+#string STR_CHIPSET_4GB_ON           #language en-US "4GB Limit"
+
 #string STR_CHIPSET_SD_PROMPT        #language en-US "uSD Routing"
 #string STR_CHIPSET_SD_HELP          #language en-US "Choose host controller to drive uSD slot"
 #string STR_CHIPSET_SD_EMMC2         #language en-US "eMMC2 SDHCI"
