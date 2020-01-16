@@ -265,6 +265,7 @@ READ_LOCK_STATUS   = TRUE
   # Networking stack
   #
 !include NetworkPkg/Network.fdf.inc
+  INF Platform/RaspberryPi/Drivers/Genet/Genet.inf
 
   #
   # RNG

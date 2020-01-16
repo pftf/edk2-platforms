@@ -660,6 +660,7 @@ DEFINE TFA_BUILD_ARTIFACT = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmwar
   # Networking stack
   #
 !include NetworkPkg/Network.dsc.inc
+  Platform/RaspberryPi/Drivers/Genet/Genet.inf
 
   #
   # RNG
