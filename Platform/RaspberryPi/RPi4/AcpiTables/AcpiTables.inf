@@ -29,9 +29,7 @@
   Fadt.aslc
   Dbg2.aslc
   Gtdt.aslc
-  Mcfg.aslc
   Dsdt.asl
-  Csrt.aslc
   Spcr.aslc
 
 [Packages]
