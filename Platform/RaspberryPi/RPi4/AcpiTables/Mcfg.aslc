@@ -1,0 +1,76 @@
+/** @file
+ *
+ *  Memory Mapped Configuration Address Space table (MCFG)
+ *
+ *  Copyright (c) 2019, Pete Batard <pete@akeo.ie>
+ *  Copyright (c) 2013-2015 Intel Corporation.
+ *
+ *  SPDX-License-Identifier: BSD-2-Clause-Patent
+ *
+ **/
+
+#include <IndustryStandard/Acpi.h>
+#include <Library/ArmLib.h>
+#include <Library/PcdLib.h>
+#include <IndustryStandard/Bcm2711.h>
+#include <IndustryStandard/MemoryMappedConfigurationSpaceAccessTable.h>
+
+#include "AcpiTables.h"
+
+//
+// Multiple APIC Description Table
+//
+#pragma pack (1)
+
+#define RPI_ACPI_OEM_MCFG_REVISION              0x00000001
+#define RPI_ACPI_ALLOCATION_STRUCTURE_COUNT     1
+
+typedef struct {
+  EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_BASE_ADDRESS_TABLE_HEADER Header;
+  EFI_ACPI_MEMORY_MAPPED_ENHANCED_CONFIGURATION_SPACE_BASE_ADDRESS_ALLOCATION_STRUCTURE  AllocationStructure[RPI_ACPI_ALLOCATION_STRUCTURE_COUNT];
+} EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE;
+
+STATIC EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE Mcfg =
+{
+  {
+    //------------------------------------------------------------------------
+    // ACPI Table Header
+    //------------------------------------------------------------------------
+    {
+      EFI_ACPI_3_0_PCI_EXPRESS_MEMORY_MAPPED_CONFIGURATION_SPACE_BASE_ADDRESS_DESCRIPTION_TABLE_SIGNATURE,
+      sizeof (EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE),
+      EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_TABLE_REVISION,
+      0x00,                                     // Checksum calculated at runtime.
+      EFI_ACPI_OEM_ID,
+      EFI_ACPI_OEM_TABLE_ID,
+      EFI_ACPI_OEM_REVISION,                    // OEM revision number
+      EFI_ACPI_CREATOR_ID,                      // ASL compiler vendor ID
+      EFI_ACPI_CREATOR_REVISION                 // ASL compiler revision number
+    },
+    //------------------------------------------------------------------------
+    // Reserved
+    //------------------------------------------------------------------------
+    0x0000000000000000,                         // Reserved
+  },
+
+  //------------------------------------------------------------------------
+  // MCFG specific fields
+  //------------------------------------------------------------------------
+  {
+    {
+      PCIE_REG_BASE + PCIE_EXT_CFG_DATA, // Base Address
+      0x0000,                            // PciSegmentGroupNumber
+      0x00,                              // StartBusNumber
+      0x00,                              // EndBusNumber
+      0x00000000                         // Reserved
+    }
+  }
+};
+
+#pragma pack()
+
+//
+// Reference the table being generated to prevent the optimizer from removing
+// the data structure from the executable
+//
+VOID* CONST ReferenceAcpiTable = &Mcfg;

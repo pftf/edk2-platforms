@@ -13,8 +13,6 @@ DefinitionBlock ("Dsdt.aml", "DSDT", 5, "MSFT", "EDK2", 2)
 {
   Scope (\_SB_)
   {
-    include ("Xhci.asl")
-
     Device (CPU0)
     {
       Name (_HID, "ACPI0007")

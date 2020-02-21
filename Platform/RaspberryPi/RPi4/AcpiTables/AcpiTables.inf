@@ -30,7 +30,9 @@
   Dbg2.aslc
   Gtdt.aslc
   Dsdt.asl
+  Pcie.asl
   Spcr.aslc
+  Mcfg.aslc
 
 [Packages]
   ArmPkg/ArmPkg.dec
