@@ -342,7 +342,7 @@
 !endif
 
   #
-  # NETSEC Info
+  # Network settings
   #
   gEfiNetworkPkgTokenSpaceGuid.PcdAllowHttpConnections|TRUE
 
