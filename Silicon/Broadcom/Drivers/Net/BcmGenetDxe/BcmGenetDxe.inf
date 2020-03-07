@@ -10,25 +10,38 @@
   INF_VERSION                    = 0x0001001A
   BASE_NAME                      = BcmGenetDxe
   FILE_GUID                      = e2b1eaf3-50b7-4ae1-b79e-ec8020cb57ac
-  MODULE_TYPE                    = DXE_DRIVER
-  VERSION_STRING                 = 0.1
+  MODULE_TYPE                    = DXE_RUNTIME_DRIVER
+  VERSION_STRING                 = 1.0
   ENTRY_POINT                    = GenetEntryPoint
 
 [Sources]
+  ComponentName.c
   Genet.c
+  SimpleNetwork.c
 
 [Packages]
   ArmPkg/ArmPkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  NetworkPkg/NetworkPkg.dec
   Silicon/Broadcom/Drivers/Net/BcmNet.dec
 
 [LibraryClasses]
   ArmLib
   BaseLib
+  DebugLib
+  DevicePathLib
   IoLib
+  NetLib
   UefiDriverEntryPoint
   UefiLib
+
+[Protocols]
+  gEdkiiNonDiscoverableDeviceProtocolGuid
+  gEfiDevicePathProtocolGuid
+  gEfiDriverBindingProtocolGuid
+  gEfiSimpleNetworkProtocolGuid
 
 [FixedPcd]
   gBcmNetTokenSpaceGuid.PcdBcmGenetRegistersAddress

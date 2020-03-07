@@ -1,13 +1,8 @@
+
 /** @file
+  Copyright (c) 2020 Jared McNeill. All rights reserved.
 
-  Copyright (c) 2020, Jeremy Linton All rights reserved.<BR>
-
-  SPDX-License-Identifier: BSD-2-Clause-Patent
-
-  This driver acts like a stub to set the Broadcom
-  Genet MAC address, until the actual network driver
-  is in place.
-
+  SPDX-License-Identifier: BSD-2-Clause
 **/
 
 #include <Library/ArmLib.h>
@@ -17,70 +12,206 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 
-#include <Genet.h>
-#include <PiDxe.h>
+#include "Genet.h"
+#include "ComponentName.h"
+#include "SimpleNetwork.h"
 
-STATIC
-VOID
-RMWRegister (
-  UINT32                Offset,
-  UINT32                Mask,
-  UINT32                In
+GLOBAL_REMOVE_IF_UNREFERENCED EFI_DRIVER_BINDING_PROTOCOL gGenetDriverBinding = {
+  GenetDriverBindingSupported,
+  GenetDriverBindingStart,
+  GenetDriverBindingStop,
+  GENET_VERSION,
+  NULL,
+  NULL
+};
+
+STATIC EFI_HANDLE mDevice;
+
+STATIC GENET_DEVICE_PATH mDevicePath = {
+  {
+    {
+      MESSAGING_DEVICE_PATH,
+      MSG_MAC_ADDR_DP,
+      {
+        (UINT8)(sizeof (MAC_ADDR_DEVICE_PATH)),
+        (UINT8)((sizeof (MAC_ADDR_DEVICE_PATH)) >> 8)
+      }
+    },
+    {{ 0 }},
+    0
+  },
+  {
+    END_DEVICE_PATH_TYPE,
+    END_ENTIRE_DEVICE_PATH_SUBTYPE,
+    {
+      sizeof (EFI_DEVICE_PATH_PROTOCOL),
+      0
+    }
+  }
+};
+
+EFI_STATUS
+EFIAPI
+GenetDriverBindingSupported (
+  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
+  IN EFI_HANDLE                   ControllerHandle,
+  IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath   OPTIONAL
   )
 {
-  EFI_PHYSICAL_ADDRESS  Addr;
-  UINT32                Data;
-  UINT32                Shift;
+  VOID *Dev;
+  EFI_STATUS Status;
 
-  Addr = GENET_BASE_ADDRESS + Offset;
-  Data = 0;
-  Shift = 1;
-  if (In) {
-    while (!(Mask & Shift))
-      Shift <<= 1;
-    Data = (MmioRead32 (Addr) & ~Mask) | ((In * Shift) & Mask);
-  } else {
-    Data = MmioRead32 (Addr) & ~Mask;
+  if (ControllerHandle != mDevice) {
+    return EFI_UNSUPPORTED;
   }
 
-  MmioWrite32 (Addr, Data);
+  Status = gBS->HandleProtocol (ControllerHandle,
+                                &gEfiSimpleNetworkProtocolGuid,
+                                (VOID **)&Dev
+                                );
+  if (Status == EFI_SUCCESS) {
+    return EFI_ALREADY_STARTED;
+  }
 
-  ArmDataMemoryBarrier ();
+  return EFI_SUCCESS;
 }
 
-STATIC
-VOID
-WdRegister (
-  UINT32                Offset,
-  UINT32                In
+EFI_STATUS
+EFIAPI
+GenetDriverBindingStart (
+  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
+  IN EFI_HANDLE                   ControllerHandle,
+  IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath   OPTIONAL
   )
 {
-  EFI_PHYSICAL_ADDRESS  Base = GENET_BASE_ADDRESS;
+  GENET_PRIVATE_DATA *Genet;
+  GENET_DEVICE_PATH *DevicePath;
+  EFI_STATUS Status;
+  UINT64 MacAddr;
+  //EFI_MAC_ADDRESS *MacAddrPtr;
 
-  MmioWrite32 (Base + Offset, In);
+  DEBUG ((EFI_D_INFO, "GenetDriverBindingStart: Entered\n"));
 
-  ArmDataMemoryBarrier ();
+  Genet = AllocatePages (EFI_SIZE_TO_PAGES (sizeof (GENET_PRIVATE_DATA)));
+  if (Genet == NULL) {
+    DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't allocate private data\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = gBS->OpenProtocol (ControllerHandle,
+                              &gEfiCallerIdGuid,
+                              (VOID **)&Genet->Dev,
+                              This->DriverBindingHandle,
+                              ControllerHandle,
+                              EFI_OPEN_PROTOCOL_BY_DRIVER);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't open NonDiscoverableDeviceProtocol: %r\n", Status));
+    return Status;
+  }
+
+  DevicePath = (GENET_DEVICE_PATH *)AllocateCopyPool (sizeof (GENET_DEVICE_PATH), &mDevicePath);
+  if (DevicePath == NULL) {
+    DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't allocate device path\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Genet->Signature = GENET_DRIVER_SIGNATURE;
+  Genet->RegBase = FixedPcdGet64 (PcdBcmGenetRegistersAddress);
+  Genet->Snp = gGenetSimpleNetwork;
+  Genet->Snp.Mode = &Genet->SnpMode;
+  Genet->SnpMode.State = EfiSimpleNetworkStopped;
+  Genet->SnpMode.HwAddressSize = NET_ETHER_ADDR_LEN;
+  Genet->SnpMode.MediaHeaderSize = sizeof (ETHER_HEAD);
+  Genet->SnpMode.MaxPacketSize = EFI_PAGE_SIZE;
+  Genet->SnpMode.NvRamSize = 0;
+  Genet->SnpMode.NvRamAccessSize = 0;
+  Genet->SnpMode.ReceiveFilterMask = EFI_SIMPLE_NETWORK_RECEIVE_UNICAST |
+                                     EFI_SIMPLE_NETWORK_RECEIVE_MULTICAST |
+                                     EFI_SIMPLE_NETWORK_RECEIVE_BROADCAST |
+                                     EFI_SIMPLE_NETWORK_RECEIVE_PROMISCUOUS |
+                                     EFI_SIMPLE_NETWORK_RECEIVE_PROMISCUOUS_MULTICAST;
+  Genet->SnpMode.ReceiveFilterSetting = 0;
+  Genet->SnpMode.MaxMCastFilterCount = 0;
+  Genet->SnpMode.MCastFilterCount = 0;
+  Genet->SnpMode.IfType = NET_IFTYPE_ETHERNET;
+  Genet->SnpMode.MacAddressChangeable = TRUE;
+  Genet->SnpMode.MultipleTxSupported = FALSE;
+  Genet->SnpMode.MediaPresentSupported = TRUE;
+  Genet->SnpMode.MediaPresent = FALSE;
+  SetMem (&Genet->SnpMode.BroadcastAddress, sizeof (EFI_MAC_ADDRESS), 0xff);
+
+  MacAddr = PcdGet64 (PcdBcmGenetMacAddress);
+  Genet->SnpMode.CurrentAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
+
+#if 0
+  MacAddrPtr = (EFI_MAC_ADDRESS *)&MacAddr;
+  Genet->SnpMode.CurrentAddress.Addr[0] = MacAddrPtr->Addr[0];
+  Genet->SnpMode.CurrentAddress.Addr[1] = MacAddrPtr->Addr[1];
+  Genet->SnpMode.CurrentAddress.Addr[2] = MacAddrPtr->Addr[2];
+  Genet->SnpMode.CurrentAddress.Addr[3] = MacAddrPtr->Addr[3];
+  Genet->SnpMode.CurrentAddress.Addr[4] = MacAddrPtr->Addr[4];
+  Genet->SnpMode.CurrentAddress.Addr[5] = MacAddrPtr->Addr[5];
+#endif
+
+#if notyet
+  CopyMem (&DevicePath->MacAddrDP.MacAddress, &Genet->SnpMode.CurrentAddress, NET_ETHER_ADDR_LEN);  
+  DevicePath->MacAddrDP.IfType = Genet->SnpMode.IfType;
+#endif
+
+  Status = gBS->InstallMultipleProtocolInterfaces (&ControllerHandle,
+                                                   &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
+                                                   NULL
+                                                   );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't install protocol interfaces: %r\n", Status));
+    gBS->CloseProtocol (ControllerHandle,
+                        &gEfiCallerIdGuid,
+                        This->DriverBindingHandle,
+                        ControllerHandle);
+    FreePages (Genet, EFI_SIZE_TO_PAGES (sizeof (GENET_PRIVATE_DATA)));
+  } else {
+    Genet->ControllerHandle = ControllerHandle;
+  }
+
+  DEBUG ((EFI_D_INFO, "GenetDriverBindingStart: Returning %r\n", Status));
+
+  return Status;
 }
 
-STATIC
-VOID
-SetMacAddress (
-  UINT8*                MacAddr
-)
+EFI_STATUS
+EFIAPI
+GenetDriverBindingStop (
+  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
+  IN EFI_HANDLE                   ControllerHandle,
+  IN UINTN                        NumberOfChildren,
+  IN EFI_HANDLE                   *ChildHandleBuffer   OPTIONAL
+  )
 {
-  // Bring the UMAC out of reset
-  RMWRegister (GENET_SYS_RBUF_FLUSH_CTRL, 0x2, 1);
-  gBS->Stall (10);
-  RMWRegister (GENET_SYS_RBUF_FLUSH_CTRL, 0x2, 0);
+  EFI_SIMPLE_NETWORK_PROTOCOL *SnpProtocol;
+  GENET_PRIVATE_DATA *Genet;
+  EFI_STATUS Status;
 
-  // Update the MAC
-  DEBUG ((DEBUG_INFO, "Using MAC address %02X:%02X:%02X:%02X:%02X:%02X\n",
-    MacAddr[0], MacAddr[1], MacAddr[2], MacAddr[3], MacAddr[4], MacAddr[5]));
+  Status = gBS->HandleProtocol (ControllerHandle,
+                                &gEfiSimpleNetworkProtocolGuid,
+                                (VOID **)&SnpProtocol
+                                );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
 
-  WdRegister (GENET_UMAC_MAC0, (MacAddr[0] << 24) | (MacAddr[1] << 16) |
-    (MacAddr[2] << 8) | MacAddr[3]);
-  WdRegister (GENET_UMAC_MAC1, (MacAddr[4] << 8) | MacAddr[5]);
+  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS(This);
 
+  Status = gBS->UninstallMultipleProtocolInterfaces (ControllerHandle,
+                                                     &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
+                                                     NULL
+                                                     );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  FreePages (Genet, EFI_SIZE_TO_PAGES (sizeof (GENET_PRIVATE_DATA)));
+
+  return Status;
 }
 
 /**
@@ -101,6 +232,11 @@ GenetEntryPoint (
   IN  EFI_SYSTEM_TABLE    *SystemTable
   )
 {
+  EFI_STATUS Status;
+  UINT64 MacAddr;
+  //EFI_MAC_ADDRESS *MacAddrPtr;
+  UINT8 *Bytes;
+#if 0
   UINT64 MacAddr;
 
   // Read the MAC address
@@ -109,6 +245,56 @@ GenetEntryPoint (
   if (MacAddr != 0) {
     SetMacAddress ((UINT8*)&MacAddr);
   }
+#endif
 
-  return EFI_SUCCESS;
+  MacAddr = PcdGet64 (PcdBcmGenetMacAddress);
+  if (MacAddr == 0) {
+    DEBUG ((EFI_D_ERROR, "GenetEntryPoint: Hardware not present\n"));
+    return EFI_NOT_FOUND;
+  }
+
+  Bytes = (UINT8 *)&MacAddr;
+  DEBUG ((EFI_D_INFO, "GenetEntryPoint: MAC address %02X:%02X:%02X:%02X:%02X:%02X\n",
+    Bytes[0], Bytes[1], Bytes[2], Bytes[3], Bytes[4], Bytes[5]));
+
+  mDevicePath.MacAddrDP.MacAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
+#if 0
+  MacAddrPtr = (EFI_MAC_ADDRESS *)&MacAddr;
+  mDevicePath.MacAddrDP.MacAddress.Addr[0] = MacAddrPtr->Addr[0];
+  mDevicePath.MacAddrDP.MacAddress.Addr[1] = MacAddrPtr->Addr[1];
+  mDevicePath.MacAddrDP.MacAddress.Addr[2] = MacAddrPtr->Addr[2];
+  mDevicePath.MacAddrDP.MacAddress.Addr[3] = MacAddrPtr->Addr[3];
+  mDevicePath.MacAddrDP.MacAddress.Addr[4] = MacAddrPtr->Addr[4];
+  mDevicePath.MacAddrDP.MacAddress.Addr[5] = MacAddrPtr->Addr[5];
+#endif
+
+  Status = gBS->InstallMultipleProtocolInterfaces (&mDevice,
+                                                   &gEfiDevicePathProtocolGuid, &mDevicePath,
+                                                   &gEfiCallerIdGuid, NULL,
+                                                   NULL
+                                                   );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "GenetEntryPoint: InstallMultipleProtocolInterfaces failed: %r\n", Status));
+    return Status;
+  }
+
+  Status = EfiLibInstallDriverBindingComponentName2 (
+    ImageHandle,
+    SystemTable,
+    &gGenetDriverBinding,
+    ImageHandle,
+    &gGenetComponentName,
+    &gGenetComponentName2
+    );
+  
+  DEBUG ((EFI_D_INFO, "GenetEntryPoint: EfiLibInstallDriverBindingComponentName2 returned %r\n", Status));
+
+  if (EFI_ERROR (Status)) {
+    gBS->UninstallMultipleProtocolInterfaces (mDevice,
+                                              &gEfiDevicePathProtocolGuid, &mDevicePath,
+                                              &gEfiCallerIdGuid, NULL,
+                                              NULL);
+  }
+
+  return Status;
 }
