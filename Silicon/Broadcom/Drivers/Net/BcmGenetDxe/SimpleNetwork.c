@@ -24,7 +24,7 @@ EFI_SIMPLE_NETWORK_PROTOCOL gGenetSimpleNetwork = {
   GenetSimpleNetworkReceiveFilters,  // ReceiveFilters
   GenetSimpleNetworkStationAddress,  // StationAddress 
   GenetSimpleNetworkStatistics,      // Statistics
-  GenetSimpleNetworkMCastIpToMac,    // MCastIpToMac 
+  NULL,                                       // MCastIpToMac 
   GenetSimpleNetworkNvData,          // NvData
   GenetSimpleNetworkGetStatus,       // GetStatus
   GenetSimpleNetworkTransmit,        // Transmit
@@ -251,18 +251,6 @@ GenetSimpleNetworkStatistics (
 
 EFI_STATUS
 EFIAPI
-GenetSimpleNetworkMCastIpToMac (
-  IN EFI_SIMPLE_NETWORK_PROTOCOL               *This,
-  IN BOOLEAN                                   IPv6,
-  IN EFI_IP_ADDRESS                            *IP,
-  OUT EFI_MAC_ADDRESS                          *MAC
-  )
-{
-  return EFI_UNSUPPORTED;
-}
-
-EFI_STATUS
-EFIAPI
 GenetSimpleNetworkNvData (
   IN EFI_SIMPLE_NETWORK_PROTOCOL              *This,
   IN BOOLEAN                                  ReadWrite,  
@@ -402,7 +390,7 @@ GenetSimpleNetworkTransmit (
 
   GenetDmaTriggerTx (Genet, Desc, DmaDeviceAddress, DmaNumberOfBytes);
 
-  DEBUG ((EFI_D_INFO, "GenetSimpleNetworkTransmit: Desc=%d VA=0x%X PA=0x%X Length=%d\n", Desc, Frame, DmaDeviceAddress, DmaNumberOfBytes));
+  //DEBUG ((EFI_D_INFO, "GenetSimpleNetworkTransmit: Desc=%d VA=0x%X PA=0x%X Length=%d\n", Desc, Frame, DmaDeviceAddress, DmaNumberOfBytes));
 
   Genet->TxProdIndex = (Genet->TxProdIndex + 1) % 0xFFFF;
   Genet->TxQueued++;
@@ -476,20 +464,19 @@ GenetSimpleNetworkReceive (
       return EFI_BUFFER_TOO_SMALL;
     }
 
-    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Frame [0x%X 0x%X]:", Genet->RxBuffer[DescIndex], Frame));
-    for (int i = 0; i < FrameLength; i++)
-      DEBUG ((EFI_D_ERROR, " %02X", Frame[i]));
-    DEBUG ((EFI_D_ERROR, "\n"));
+    //DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Frame [0x%X 0x%X]:", Genet->RxBuffer[DescIndex], Frame));
+    //for (int i = 0; i < FrameLength; i++)
+    //  DEBUG ((EFI_D_ERROR, " %02X", Frame[i]));
+    //DEBUG ((EFI_D_ERROR, "\n"));
 
     if (DestAddr != NULL) {
-      CopyMem (DestAddr, &Frame[0], NET_ETHER_ADDR_LEN);
+      CopyMem (&DestAddr->Addr[0], &Frame[0], NET_ETHER_ADDR_LEN);
     }
     if (SrcAddr != NULL) {
-      CopyMem (SrcAddr, &Frame[6], NET_ETHER_ADDR_LEN);
+      CopyMem (&SrcAddr->Addr[0], &Frame[6], NET_ETHER_ADDR_LEN);
     }
     if (Protocol != NULL) {
       *Protocol = (UINT16) ((Frame[12] << 8) | Frame[13]);
-      DEBUG ((EFI_D_INFO, "GenetSimpleNetworkReceive: Protocol is 0x%04X\n", *Protocol));
     }
     if (HeaderSize != NULL) {
       *HeaderSize = Genet->SnpMode.MediaHeaderSize;

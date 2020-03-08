@@ -72,15 +72,6 @@ GenetSimpleNetworkStatistics (
 
 EFI_STATUS
 EFIAPI
-GenetSimpleNetworkMCastIpToMac (
-  IN EFI_SIMPLE_NETWORK_PROTOCOL               *This,
-  IN BOOLEAN                                   IPv6,
-  IN EFI_IP_ADDRESS                            *IP,
-  OUT EFI_MAC_ADDRESS                          *MAC
-  );
-
-EFI_STATUS
-EFIAPI
 GenetSimpleNetworkNvData (
   IN EFI_SIMPLE_NETWORK_PROTOCOL              *This,
   IN BOOLEAN                                  ReadWrite,  
