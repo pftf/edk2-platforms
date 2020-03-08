@@ -13,8 +13,32 @@
 #include <Library/UefiLib.h>
 
 #include "Genet.h"
-#include "ComponentName.h"
 #include "SimpleNetwork.h"
+
+EFI_STATUS
+EFIAPI
+GenetDriverBindingSupported (
+  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
+  IN EFI_HANDLE                   ControllerHandle,
+  IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath   OPTIONAL
+  );
+
+EFI_STATUS
+EFIAPI
+GenetDriverBindingStart (
+  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
+  IN EFI_HANDLE                   ControllerHandle,
+  IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath   OPTIONAL
+  );
+
+EFI_STATUS
+EFIAPI
+GenetDriverBindingStop (
+  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
+  IN EFI_HANDLE                   ControllerHandle,
+  IN UINTN                        NumberOfChildren,
+  IN EFI_HANDLE                   *ChildHandleBuffer   OPTIONAL
+  );
 
 GLOBAL_REMOVE_IF_UNREFERENCED EFI_DRIVER_BINDING_PROTOCOL gGenetDriverBinding = {
   GenetDriverBindingSupported,
@@ -38,7 +62,7 @@ STATIC GENET_DEVICE_PATH mDevicePath = {
       }
     },
     {{ 0 }},
-    0
+    NET_IFTYPE_ETHERNET
   },
   {
     END_DEVICE_PATH_TYPE,
@@ -85,11 +109,9 @@ GenetDriverBindingStart (
   )
 {
   GENET_PRIVATE_DATA *Genet;
-  GENET_DEVICE_PATH *DevicePath;
   EFI_STATUS Status;
   UINT64 MacAddr;
-  //EFI_MAC_ADDRESS *MacAddrPtr;
-
+  
   DEBUG ((EFI_D_INFO, "GenetDriverBindingStart: Entered\n"));
 
   Genet = AllocatePages (EFI_SIZE_TO_PAGES (sizeof (GENET_PRIVATE_DATA)));
@@ -109,14 +131,9 @@ GenetDriverBindingStart (
     return Status;
   }
 
-  DevicePath = (GENET_DEVICE_PATH *)AllocateCopyPool (sizeof (GENET_DEVICE_PATH), &mDevicePath);
-  if (DevicePath == NULL) {
-    DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't allocate device path\n"));
-    return EFI_OUT_OF_RESOURCES;
-  }
-
   Genet->Signature = GENET_DRIVER_SIGNATURE;
   Genet->RegBase = FixedPcdGet64 (PcdBcmGenetRegistersAddress);
+  Genet->PhyLinkUp = FALSE;
   Genet->Snp = gGenetSimpleNetwork;
   Genet->Snp.Mode = &Genet->SnpMode;
   Genet->SnpMode.State = EfiSimpleNetworkStopped;
@@ -142,21 +159,6 @@ GenetDriverBindingStart (
 
   MacAddr = PcdGet64 (PcdBcmGenetMacAddress);
   Genet->SnpMode.CurrentAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
-
-#if 0
-  MacAddrPtr = (EFI_MAC_ADDRESS *)&MacAddr;
-  Genet->SnpMode.CurrentAddress.Addr[0] = MacAddrPtr->Addr[0];
-  Genet->SnpMode.CurrentAddress.Addr[1] = MacAddrPtr->Addr[1];
-  Genet->SnpMode.CurrentAddress.Addr[2] = MacAddrPtr->Addr[2];
-  Genet->SnpMode.CurrentAddress.Addr[3] = MacAddrPtr->Addr[3];
-  Genet->SnpMode.CurrentAddress.Addr[4] = MacAddrPtr->Addr[4];
-  Genet->SnpMode.CurrentAddress.Addr[5] = MacAddrPtr->Addr[5];
-#endif
-
-#if notyet
-  CopyMem (&DevicePath->MacAddrDP.MacAddress, &Genet->SnpMode.CurrentAddress, NET_ETHER_ADDR_LEN);  
-  DevicePath->MacAddrDP.IfType = Genet->SnpMode.IfType;
-#endif
 
   Status = gBS->InstallMultipleProtocolInterfaces (&ControllerHandle,
                                                    &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
@@ -258,15 +260,6 @@ GenetEntryPoint (
     Bytes[0], Bytes[1], Bytes[2], Bytes[3], Bytes[4], Bytes[5]));
 
   mDevicePath.MacAddrDP.MacAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
-#if 0
-  MacAddrPtr = (EFI_MAC_ADDRESS *)&MacAddr;
-  mDevicePath.MacAddrDP.MacAddress.Addr[0] = MacAddrPtr->Addr[0];
-  mDevicePath.MacAddrDP.MacAddress.Addr[1] = MacAddrPtr->Addr[1];
-  mDevicePath.MacAddrDP.MacAddress.Addr[2] = MacAddrPtr->Addr[2];
-  mDevicePath.MacAddrDP.MacAddress.Addr[3] = MacAddrPtr->Addr[3];
-  mDevicePath.MacAddrDP.MacAddress.Addr[4] = MacAddrPtr->Addr[4];
-  mDevicePath.MacAddrDP.MacAddress.Addr[5] = MacAddrPtr->Addr[5];
-#endif
 
   Status = gBS->InstallMultipleProtocolInterfaces (&mDevice,
                                                    &gEfiDevicePathProtocolGuid, &mDevicePath,

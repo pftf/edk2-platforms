@@ -17,6 +17,7 @@
 [Sources]
   ComponentName.c
   Genet.c
+  GenetUtil.c
   SimpleNetwork.c
 
 [Packages]

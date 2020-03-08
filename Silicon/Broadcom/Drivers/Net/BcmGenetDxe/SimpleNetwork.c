@@ -71,8 +71,7 @@ GenetSimpleNetworkStop (
     return EFI_NOT_STARTED;
   }
 
-  // XXXTODO
-  //GenetStop (Genet);
+  GenetEnableTxRx (Genet, FALSE);
 
   switch (Genet->SnpMode.State)
   {
@@ -94,6 +93,7 @@ GenetSimpleNetworkInitialize (
   )
 {
   GENET_PRIVATE_DATA *Genet;
+  EFI_STATUS Status;
 
   if (This == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -107,7 +107,25 @@ GenetSimpleNetworkInitialize (
     return EFI_NOT_STARTED;
   }
 
-  // XXXTODO
+  GenetReset (Genet);
+  GenetSetPhyMode (Genet, GENET_PHY_MODE_RGMII);
+
+  Status = GenetPhyInit (Genet);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  GenetSetMacAddress (Genet, &Genet->SnpMode.CurrentAddress);
+  GenetSetPromisc (Genet, TRUE);
+
+  Status = GenetPhyUpdateConfig (Genet);
+  if (EFI_ERROR (Status)) {
+    Genet->SnpMode.MediaPresent = FALSE;
+  } else {
+    Genet->SnpMode.MediaPresent = TRUE;
+  }
+
+  GenetEnableTxRx (Genet, TRUE);
 
   Genet->SnpMode.State = EfiSimpleNetworkInitialized;
 
@@ -122,6 +140,7 @@ GenetSimpleNetworkReset (
   )
 {
   GENET_PRIVATE_DATA *Genet;
+  EFI_STATUS Status;
 
   if (This == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -133,6 +152,11 @@ GenetSimpleNetworkReset (
   }
   if (Genet->SnpMode.State == EfiSimpleNetworkStopped) {
     return EFI_NOT_STARTED;
+  }
+
+  Status = GenetPhyReset (Genet);
+  if (EFI_ERROR (Status)) {
+    return Status;
   }
 
   // XXXTODO
@@ -253,7 +277,29 @@ GenetSimpleNetworkGetStatus (
   OUT VOID                                    **TxBuf            OPTIONAL
   )
 {
-  return EFI_UNSUPPORTED;
+  GENET_PRIVATE_DATA *Genet;
+  EFI_STATUS Status;
+
+  if (This == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS(This);
+  if (Genet->SnpMode.State != EfiSimpleNetworkInitialized) {
+    return EFI_NOT_STARTED;
+  }
+
+  Status = GenetPhyUpdateConfig (Genet);
+  if (EFI_ERROR (Status)) {
+    Genet->SnpMode.MediaPresent = FALSE;
+  } else {
+    Genet->SnpMode.MediaPresent = TRUE;
+  }
+
+  if (TxBuf != NULL)
+    *TxBuf = NULL;
+
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
