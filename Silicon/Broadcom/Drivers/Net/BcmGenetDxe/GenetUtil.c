@@ -161,7 +161,7 @@ GenetPhyAutoNegotiate (
     if (EFI_ERROR (Status)) {
         return Status;
     }
-    Anar |= ANAR_TX_FD | ANAR_TX | ANAR_10_FD | ANAR_10;
+    Anar |= ANAR_TX_FD | ANAR_TX | ANAR_10_FD | ANAR_10 | ANAR_CSMA;
     Status = GenetPhyWrite (Genet, Genet->PhyAddr, MII_ANAR, Anar);
     if (EFI_ERROR (Status)) {
         return Status;
@@ -337,15 +337,15 @@ GenetPhyGetConfig (
     //DEBUG ((EFI_D_INFO, "GenetPhyGetConfig: Gtsr=0x%04X Gtcr=0x%04X Gt=0x%04X\n", Gtsr, Gtcr, Gt));
     //DEBUG ((EFI_D_INFO, "GenetPhyGetConfig: Anlpar=0x%04X Anar=0x%04X An=0x%04X\n", Anlpar, Anar, An));
 
-    if ((Gt & (GTCR_ADV_1000TFDX|GTCR_ADV_1000THDX)) != 0) {
+    if ((Gt & (GTSR_LP_1000TFDX|GTSR_LP_1000THDX)) != 0) {
         *Speed = BMCR_S1000;
-        *Duplex = (Gt & GTCR_ADV_1000TFDX) ? BMCR_FDX : 0;
-    } else if ((An & (ANAR_TX_FD|ANAR_TX)) != 0) {
+        *Duplex = (Gt & GTSR_LP_1000TFDX) ? BMCR_FDX : 0;
+    } else if ((An & (ANLPAR_TX_FD|ANLPAR_TX)) != 0) {
         *Speed = BMCR_S100;
-        *Duplex = (An & ANAR_TX_FD) ? BMCR_FDX : 0;
+        *Duplex = (An & ANLPAR_TX_FD) ? BMCR_FDX : 0;
     } else {
         *Speed = BMCR_S10;
-        *Duplex = (An & ANAR_10_FD) ? BMCR_FDX : 0;
+        *Duplex = (An & ANLPAR_10_FD) ? BMCR_FDX : 0;
     }
 
     DEBUG ((EFI_D_INFO, "GenetPhyGetConfig: Link speed %d Mbps, %a-duplex\n",
