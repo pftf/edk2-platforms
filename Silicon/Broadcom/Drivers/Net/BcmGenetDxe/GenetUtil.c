@@ -601,6 +601,7 @@ GenetDmaInitRings (
     Genet->TxQueued = 0;
     Genet->TxConsIndex = 0;
     Genet->TxProdIndex = 0;
+
     Genet->RxConsIndex = 0;
     Genet->RxProdIndex = 0;
 
@@ -666,9 +667,59 @@ GenetDmaAlloc (
             GenetDmaFree (Genet);
             return Status;
         }
+        Status = GenetDmaMapRxDescriptor (Genet, n);
+        if (EFI_ERROR (Status)) {
+            GenetDmaFree (Genet);
+            return Status;
+        }
     }
 
     return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
+GenetDmaMapRxDescriptor (
+    IN GENET_PRIVATE_DATA * Genet,
+    IN UINT8                DescIndex
+    )
+{
+    EFI_STATUS Status;
+    UINTN DmaNumberOfBytes;
+
+    ASSERT (Genet->RxBufferMap[DescIndex].Mapping == NULL);
+    ASSERT (Genet->RxBuffer[DescIndex] != NULL);
+
+    DmaNumberOfBytes = GENET_MAX_PACKET_SIZE;
+    Status = DmaMap (MapOperationBusMasterWrite,
+                (VOID *)Genet->RxBuffer[DescIndex],
+                &DmaNumberOfBytes,
+                &Genet->RxBufferMap[DescIndex].Pa,
+                &Genet->RxBufferMap[DescIndex].Mapping);
+    if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_ERROR, "GenetDmaMapRxDescriptor: Failed to map RX buffer: %r\n", Status));
+        return Status;
+    }
+
+    DEBUG ((EFI_D_INFO, "GenetDmaMapRxDescriptor: Desc 0x%X mapped to 0x%X\n", DescIndex, Genet->RxBufferMap[DescIndex].Pa));
+
+    GenetMmioWrite (Genet, GENET_RX_DESC_ADDRESS_LO (DescIndex), Genet->RxBufferMap[DescIndex].Pa & 0xFFFFFFFF);
+    GenetMmioWrite (Genet, GENET_RX_DESC_ADDRESS_HI (DescIndex), (Genet->RxBufferMap[DescIndex].Pa >> 32) & 0xFFFFFFFF);
+
+    return EFI_SUCCESS;
+}
+
+VOID
+EFIAPI
+GenetDmaUnmapRxDescriptor (
+    IN GENET_PRIVATE_DATA * Genet,
+    IN UINT8                DescIndex
+    )
+{
+    if (Genet->RxBufferMap[DescIndex].Mapping != NULL) {
+        DmaUnmap (Genet->RxBufferMap[DescIndex].Mapping);
+        Genet->RxBufferMap[DescIndex].Mapping = NULL;
+    }
 }
 
 VOID
@@ -680,6 +731,8 @@ GenetDmaFree (
     UINTN n;
 
     for (n = 0; n < GENET_DMA_DESC_COUNT; n++) {
+        GenetDmaUnmapRxDescriptor (Genet, n);
+
         if (Genet->RxBuffer[n] != NULL) {
             DmaFreeBuffer (EFI_SIZE_TO_PAGES (GENET_MAX_PACKET_SIZE), Genet->RxBuffer[n]);
             Genet->RxBuffer[n] = NULL;
@@ -732,4 +785,36 @@ GenetTxIntr (
     } else {
         *TxBuf = NULL;
     }
+}
+
+EFI_STATUS
+EFIAPI
+GenetRxIntr (
+    IN GENET_PRIVATE_DATA * Genet,
+    OUT UINT8 *             DescIndex,
+    OUT UINTN *             FrameLength
+    )
+{
+    EFI_STATUS Status;
+    UINT32 ProdIndex, Total;
+    UINT32 DescStatus;
+    UINT8 Qid = GENET_DMA_DEFAULT_QUEUE;
+
+    ProdIndex = GenetMmioRead (Genet, GENET_RX_DMA_PROD_INDEX (Qid)) & 0xFFFF;
+    Total = (ProdIndex - Genet->RxConsIndex) & 0xFFFF;
+    if (Total > 0) {
+        *DescIndex = Genet->RxConsIndex % GENET_DMA_DESC_COUNT;
+        DescStatus = GenetMmioRead (Genet, GENET_RX_DESC_STATUS (*DescIndex));
+        *FrameLength = __SHIFTOUT (DescStatus, GENET_RX_DESC_STATUS_BUFLEN);
+
+        DEBUG ((EFI_D_INFO, "GenetRxIntr: DescIndex=0x%X FrameLength=0x%X\n", *DescIndex, *FrameLength));
+
+        Genet->RxConsIndex = (Genet->RxConsIndex + 1) & 0xFFFF;
+        GenetMmioWrite (Genet, GENET_RX_DMA_CONS_INDEX (Qid), Genet->RxConsIndex);
+        Status = EFI_SUCCESS;
+    } else {
+        Status = EFI_NOT_READY;
+    }
+
+    return Status;
 }

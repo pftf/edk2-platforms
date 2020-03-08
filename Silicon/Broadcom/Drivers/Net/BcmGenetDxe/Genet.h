@@ -30,7 +30,6 @@ typedef struct {
 } GENET_DEVICE_PATH;
 
 typedef struct {
-  VOID *                          Va;
   EFI_PHYSICAL_ADDRESS            Pa;
   VOID *                          Mapping;
 } GENET_MAP_INFO;
@@ -183,11 +182,33 @@ GenetDmaTriggerTx (
   IN UINTN                NumberOfBytes
   );
 
+EFI_STATUS
+EFIAPI
+GenetDmaMapRxDescriptor (
+  IN GENET_PRIVATE_DATA * Genet,
+  IN UINT8                DescIndex
+  );
+
+VOID
+EFIAPI
+GenetDmaUnmapRxDescriptor (
+  IN GENET_PRIVATE_DATA * Genet,
+  IN UINT8                DescIndex
+  );
+
 VOID
 EFIAPI
 GenetTxIntr (
   IN GENET_PRIVATE_DATA * Genet,
   OUT VOID **             TxBuf
+  );
+
+EFI_STATUS
+EFIAPI
+GenetRxIntr (
+  IN GENET_PRIVATE_DATA * Genet,
+  OUT UINT8 *             DescIndex,
+  OUT UINTN *             FrameLength
   );
 
 #endif /* BCM_GENET_H__ */

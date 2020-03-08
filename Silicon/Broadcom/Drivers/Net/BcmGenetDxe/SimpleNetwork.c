@@ -416,5 +416,82 @@ GenetSimpleNetworkReceive (
   OUT    UINT16                               *Protocol    OPTIONAL
   )
 {
-  return EFI_NOT_READY;
+  GENET_PRIVATE_DATA *Genet;
+  EFI_STATUS Status;
+  UINT8 DescIndex;
+  UINT8 *Frame;
+  UINTN FrameLength;
+
+  if (This == NULL || Buffer == NULL) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Invalid parameter (missing handle or buffer)\n"));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS(This);
+  if (Genet->SnpMode.State != EfiSimpleNetworkInitialized) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Not started\n"));
+    return EFI_NOT_STARTED;
+  }
+
+  Status = EfiAcquireLockOrFail (&Genet->Lock);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Couldn't get lock: %r\n", Status));
+    return EFI_ACCESS_DENIED;
+  }
+  
+  Status = GenetRxIntr (Genet, &DescIndex, &FrameLength);
+  if (EFI_ERROR (Status)) {
+    EfiReleaseLock (&Genet->Lock);
+    return Status;
+  }
+
+  ASSERT (Genet->RxBufferMap[DescIndex].Mapping != NULL);
+
+  GenetDmaUnmapRxDescriptor (Genet, DescIndex);
+
+  Frame = Genet->RxBuffer[DescIndex];
+
+  if (FrameLength > 2 + Genet->SnpMode.MediaHeaderSize) {
+    // Received frame has 2 bytes of padding at the start
+    Frame += 2;
+    FrameLength -= 2;
+
+    if (*BufferSize < FrameLength) {
+      DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Buffer size (0x%X) is too small for frame (0x%X)\n", *BufferSize, FrameLength));
+      EfiReleaseLock (&Genet->Lock);
+      return EFI_BUFFER_TOO_SMALL;
+    }
+
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Frame [0x%X 0x%X]:", Genet->RxBuffer[DescIndex], Frame));
+    for (int i = 0; i < Genet->SnpMode.MediaHeaderSize; i++)
+      DEBUG ((EFI_D_ERROR, " %02X", Frame[i]));
+    DEBUG ((EFI_D_ERROR, "\n"));
+
+    if (DestAddr != NULL) {
+      CopyMem (&DestAddr->Addr[0], &Frame[0], NET_ETHER_ADDR_LEN);
+    }
+    if (SrcAddr != NULL) {
+      CopyMem (&SrcAddr->Addr[0], &Frame[6], NET_ETHER_ADDR_LEN);
+    }
+    if (Protocol != NULL) {
+      *Protocol = NTOHS (Frame[12] | (Frame[13] << 8));
+    }
+
+    CopyMem (Buffer, Frame, FrameLength);
+    *BufferSize = FrameLength;
+    if (HeaderSize != NULL) {
+      *HeaderSize = Genet->SnpMode.MediaHeaderSize;
+    }
+  } else {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Short packet (FrameLength 0x%X)", FrameLength));
+    Status = EFI_NOT_READY;
+  }
+
+  Status = GenetDmaMapRxDescriptor (Genet, DescIndex);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Failed to remap RX descriptor!\n"));
+  }
+
+  EfiReleaseLock (&Genet->Lock);
+  return Status;
 }
