@@ -155,7 +155,7 @@ GenetDriverBindingStart (
                                      EFI_SIMPLE_NETWORK_RECEIVE_BROADCAST |
                                      EFI_SIMPLE_NETWORK_RECEIVE_PROMISCUOUS |
                                      EFI_SIMPLE_NETWORK_RECEIVE_PROMISCUOUS_MULTICAST;
-  Genet->SnpMode.ReceiveFilterSetting = 0;
+  Genet->SnpMode.ReceiveFilterSetting = Genet->SnpMode.ReceiveFilterMask;
   Genet->SnpMode.MaxMCastFilterCount = 0;
   Genet->SnpMode.MCastFilterCount = 0;
   Genet->SnpMode.IfType = NET_IFTYPE_ETHERNET;
@@ -166,6 +166,7 @@ GenetDriverBindingStart (
   SetMem (&Genet->SnpMode.BroadcastAddress, sizeof (EFI_MAC_ADDRESS), 0xff);
 
   MacAddr = PcdGet64 (PcdBcmGenetMacAddress);
+  Genet->SnpMode.PermanentAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
   Genet->SnpMode.CurrentAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
 
   Status = gBS->InstallMultipleProtocolInterfaces (&ControllerHandle,

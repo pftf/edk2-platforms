@@ -127,7 +127,11 @@ GenetSimpleNetworkInitialize (
     Genet->SnpMode.MediaPresent = TRUE;
   }
 
-  GenetDmaInitRings (Genet);
+  Status = GenetDmaInitRings (Genet);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
   GenetEnableTxRx (Genet);
 
   Genet->SnpMode.State = EfiSimpleNetworkInitialized;
@@ -297,6 +301,12 @@ GenetSimpleNetworkGetStatus (
     Genet->SnpMode.MediaPresent = TRUE;
   }
   
+  if (InterruptStatus != NULL) {
+    // XXX
+    *InterruptStatus = 0;
+    *InterruptStatus |= EFI_SIMPLE_NETWORK_RECEIVE_INTERRUPT;
+  }
+
   if (TxBuf != NULL) {
     GenetTxIntr (Genet, TxBuf);
     if (*TxBuf != NULL) {
@@ -458,30 +468,37 @@ GenetSimpleNetworkReceive (
 
     if (*BufferSize < FrameLength) {
       DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Buffer size (0x%X) is too small for frame (0x%X)\n", *BufferSize, FrameLength));
+      Status = GenetDmaMapRxDescriptor (Genet, DescIndex);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Failed to remap RX descriptor!\n"));
+      }
       EfiReleaseLock (&Genet->Lock);
       return EFI_BUFFER_TOO_SMALL;
     }
 
     DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Frame [0x%X 0x%X]:", Genet->RxBuffer[DescIndex], Frame));
-    for (int i = 0; i < Genet->SnpMode.MediaHeaderSize; i++)
+    for (int i = 0; i < FrameLength; i++)
       DEBUG ((EFI_D_ERROR, " %02X", Frame[i]));
     DEBUG ((EFI_D_ERROR, "\n"));
 
     if (DestAddr != NULL) {
-      CopyMem (&DestAddr->Addr[0], &Frame[0], NET_ETHER_ADDR_LEN);
+      CopyMem (DestAddr, &Frame[0], NET_ETHER_ADDR_LEN);
     }
     if (SrcAddr != NULL) {
-      CopyMem (&SrcAddr->Addr[0], &Frame[6], NET_ETHER_ADDR_LEN);
+      CopyMem (SrcAddr, &Frame[6], NET_ETHER_ADDR_LEN);
     }
     if (Protocol != NULL) {
-      *Protocol = NTOHS (Frame[12] | (Frame[13] << 8));
+      *Protocol = (UINT16) ((Frame[12] << 8) | Frame[13]);
+      DEBUG ((EFI_D_INFO, "GenetSimpleNetworkReceive: Protocol is 0x%04X\n", *Protocol));
+    }
+    if (HeaderSize != NULL) {
+      *HeaderSize = Genet->SnpMode.MediaHeaderSize;
     }
 
     CopyMem (Buffer, Frame, FrameLength);
     *BufferSize = FrameLength;
-    if (HeaderSize != NULL) {
-      *HeaderSize = Genet->SnpMode.MediaHeaderSize;
-    }
+    
+    Status = EFI_SUCCESS;
   } else {
     DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkReceive: Short packet (FrameLength 0x%X)", FrameLength));
     Status = EFI_NOT_READY;

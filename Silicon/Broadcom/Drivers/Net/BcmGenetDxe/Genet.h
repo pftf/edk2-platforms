@@ -155,7 +155,7 @@ GenetMacUpdateConfig (
   IN UINT16              Duplex
   );
 
-VOID
+EFI_STATUS
 EFIAPI
 GenetDmaInitRings (
   IN GENET_PRIVATE_DATA * Genet

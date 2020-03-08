@@ -590,13 +590,15 @@ GenetMacUpdateConfig (
     GenetMmioWrite (Genet, GENET_UMAC_CMD, Value);
 }
 
-VOID
+EFI_STATUS
 EFIAPI
 GenetDmaInitRings (
     IN GENET_PRIVATE_DATA * Genet
     )
 {
+    EFI_STATUS Status;
     UINT8 Qid = GENET_DMA_DEFAULT_QUEUE;
+    UINTN n;
 
     Genet->TxQueued = 0;
     Genet->TxConsIndex = 0;
@@ -649,6 +651,16 @@ GenetDmaInitRings (
 
     // Enable RX queue
     GenetMmioWrite (Genet, GENET_RX_DMA_RING_CFG, (1U << Qid));
+
+    // Map RX buffers
+    for (n = 0; n < GENET_DMA_DESC_COUNT; n++) {
+        Status = GenetDmaMapRxDescriptor (Genet, n);
+        if (EFI_ERROR (Status)) {
+            return Status;
+        }
+    }
+
+    return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -667,11 +679,8 @@ GenetDmaAlloc (
             GenetDmaFree (Genet);
             return Status;
         }
-        Status = GenetDmaMapRxDescriptor (Genet, n);
-        if (EFI_ERROR (Status)) {
-            GenetDmaFree (Genet);
-            return Status;
-        }
+        
+        SetMem (Genet->RxBuffer[n], GENET_MAX_PACKET_SIZE, 0x5a);
     }
 
     return EFI_SUCCESS;
@@ -701,7 +710,7 @@ GenetDmaMapRxDescriptor (
         return Status;
     }
 
-    DEBUG ((EFI_D_INFO, "GenetDmaMapRxDescriptor: Desc 0x%X mapped to 0x%X\n", DescIndex, Genet->RxBufferMap[DescIndex].Pa));
+    //DEBUG ((EFI_D_INFO, "GenetDmaMapRxDescriptor: Desc 0x%X mapped to 0x%X\n", DescIndex, Genet->RxBufferMap[DescIndex].Pa));
 
     GenetMmioWrite (Genet, GENET_RX_DESC_ADDRESS_LO (DescIndex), Genet->RxBufferMap[DescIndex].Pa & 0xFFFFFFFF);
     GenetMmioWrite (Genet, GENET_RX_DESC_ADDRESS_HI (DescIndex), (Genet->RxBufferMap[DescIndex].Pa >> 32) & 0xFFFFFFFF);
@@ -807,7 +816,7 @@ GenetRxIntr (
         DescStatus = GenetMmioRead (Genet, GENET_RX_DESC_STATUS (*DescIndex));
         *FrameLength = __SHIFTOUT (DescStatus, GENET_RX_DESC_STATUS_BUFLEN);
 
-        DEBUG ((EFI_D_INFO, "GenetRxIntr: DescIndex=0x%X FrameLength=0x%X\n", *DescIndex, *FrameLength));
+        //DEBUG ((EFI_D_INFO, "GenetRxIntr: DescIndex=0x%X FrameLength=0x%X\n", *DescIndex, *FrameLength));
 
         Genet->RxConsIndex = (Genet->RxConsIndex + 1) & 0xFFFF;
         GenetMmioWrite (Genet, GENET_RX_DMA_CONS_INDEX (Qid), Genet->RxConsIndex);
