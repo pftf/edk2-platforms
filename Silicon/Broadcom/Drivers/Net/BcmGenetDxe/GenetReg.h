@@ -37,6 +37,7 @@
 #define	GENET_UMAC_CMD			                0x808
 #define	 GENET_UMAC_CMD_LCL_LOOP_EN	            BIT15
 #define	 GENET_UMAC_CMD_SW_RESET	            BIT13
+#define  GENET_UMAC_CMD_HD_EN                   BIT10
 #define	 GENET_UMAC_CMD_PROMISC		            BIT4
 #define	 GENET_UMAC_CMD_SPEED		            (BIT3|BIT2)
 #define	  GENET_UMAC_CMD_SPEED_10	            0

@@ -33,6 +33,7 @@
   BaseLib
   DebugLib
   DevicePathLib
+  DmaLib
   IoLib
   NetLib
   UefiDriverEntryPoint

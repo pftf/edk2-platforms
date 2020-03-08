@@ -114,7 +114,7 @@ GenetDriverBindingStart (
   
   DEBUG ((EFI_D_INFO, "GenetDriverBindingStart: Entered\n"));
 
-  Genet = AllocatePages (EFI_SIZE_TO_PAGES (sizeof (GENET_PRIVATE_DATA)));
+  Genet = AllocateZeroPool (sizeof (GENET_PRIVATE_DATA));
   if (Genet == NULL) {
     DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't allocate private data\n"));
     return EFI_OUT_OF_RESOURCES;
@@ -127,19 +127,27 @@ GenetDriverBindingStart (
                               ControllerHandle,
                               EFI_OPEN_PROTOCOL_BY_DRIVER);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't open NonDiscoverableDeviceProtocol: %r\n", Status));
+    DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't open protocol: %r\n", Status));
+    return Status;
+  }
+
+  Status = GenetDmaAlloc (Genet);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "GenetDriverBindingStart: Couldn't allocate DMA buffers: %r\n", Status));
     return Status;
   }
 
   Genet->Signature = GENET_DRIVER_SIGNATURE;
   Genet->RegBase = FixedPcdGet64 (PcdBcmGenetRegistersAddress);
+  Genet->PhyMode = GENET_PHY_MODE_RGMII;
   Genet->PhyLinkUp = FALSE;
+  EfiInitializeLock (&Genet->Lock, TPL_CALLBACK);
   Genet->Snp = gGenetSimpleNetwork;
   Genet->Snp.Mode = &Genet->SnpMode;
   Genet->SnpMode.State = EfiSimpleNetworkStopped;
   Genet->SnpMode.HwAddressSize = NET_ETHER_ADDR_LEN;
   Genet->SnpMode.MediaHeaderSize = sizeof (ETHER_HEAD);
-  Genet->SnpMode.MaxPacketSize = EFI_PAGE_SIZE;
+  Genet->SnpMode.MaxPacketSize = GENET_MAX_PACKET_SIZE;
   Genet->SnpMode.NvRamSize = 0;
   Genet->SnpMode.NvRamAccessSize = 0;
   Genet->SnpMode.ReceiveFilterMask = EFI_SIMPLE_NETWORK_RECEIVE_UNICAST |
@@ -170,7 +178,7 @@ GenetDriverBindingStart (
                         &gEfiCallerIdGuid,
                         This->DriverBindingHandle,
                         ControllerHandle);
-    FreePages (Genet, EFI_SIZE_TO_PAGES (sizeof (GENET_PRIVATE_DATA)));
+    FreePool (Genet);
   } else {
     Genet->ControllerHandle = ControllerHandle;
   }
@@ -210,6 +218,8 @@ GenetDriverBindingStop (
   if (EFI_ERROR (Status)) {
     return Status;
   }
+
+  GenetDmaFree (Genet);
 
   FreePages (Genet, EFI_SIZE_TO_PAGES (sizeof (GENET_PRIVATE_DATA)));
 

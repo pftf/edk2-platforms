@@ -8,6 +8,8 @@
 #include "GenetReg.h"
 #include "SimpleNetwork.h"
 
+#include <Library/DmaLib.h>
+
 ///
 /// Simple Network Protocol instance
 ///
@@ -71,7 +73,7 @@ GenetSimpleNetworkStop (
     return EFI_NOT_STARTED;
   }
 
-  GenetEnableTxRx (Genet, FALSE);
+  GenetDisableTxRx (Genet);
 
   switch (Genet->SnpMode.State)
   {
@@ -108,7 +110,7 @@ GenetSimpleNetworkInitialize (
   }
 
   GenetReset (Genet);
-  GenetSetPhyMode (Genet, GENET_PHY_MODE_RGMII);
+  GenetSetPhyMode (Genet, Genet->PhyMode);
 
   Status = GenetPhyInit (Genet);
   if (EFI_ERROR (Status)) {
@@ -125,7 +127,8 @@ GenetSimpleNetworkInitialize (
     Genet->SnpMode.MediaPresent = TRUE;
   }
 
-  GenetEnableTxRx (Genet, TRUE);
+  GenetDmaInitRings (Genet);
+  GenetEnableTxRx (Genet);
 
   Genet->SnpMode.State = EfiSimpleNetworkInitialized;
 
@@ -159,8 +162,6 @@ GenetSimpleNetworkReset (
     return Status;
   }
 
-  // XXXTODO
-
   return EFI_SUCCESS;
 }
 
@@ -184,7 +185,7 @@ GenetSimpleNetworkShutdown (
     return EFI_NOT_STARTED;
   }
 
-  // XXXTODO
+  GenetDisableTxRx (Genet);
 
   Genet->SnpMode.State = EfiSimpleNetworkStopped;
 
@@ -295,9 +296,13 @@ GenetSimpleNetworkGetStatus (
   } else {
     Genet->SnpMode.MediaPresent = TRUE;
   }
-
-  if (TxBuf != NULL)
-    *TxBuf = NULL;
+  
+  if (TxBuf != NULL) {
+    GenetTxIntr (Genet, TxBuf);
+    if (*TxBuf != NULL) {
+      DEBUG ((EFI_D_INFO, "GenetSimpleNetworkGetStatus: VA=0x%X\n", *TxBuf));
+    }
+  }
 
   return EFI_SUCCESS;
 }
@@ -314,7 +319,89 @@ GenetSimpleNetworkTransmit (
   IN UINT16                                   *Protocol   OPTIONAL
   )
 {
-  return EFI_UNSUPPORTED;
+  GENET_PRIVATE_DATA *Genet;
+  EFI_STATUS Status;
+  UINT8 *Frame = Buffer;
+  UINT8 Desc;
+  PHYSICAL_ADDRESS DmaDeviceAddress;
+  UINTN DmaNumberOfBytes;
+  VOID *DmaMapping;
+
+  if (This == NULL || Buffer == NULL) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkTransmit: Invalid parameter (missing handle or buffer)\n"));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS(This);
+  if (Genet->SnpMode.State != EfiSimpleNetworkInitialized) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkTransmit: Not started\n"));
+    return EFI_NOT_STARTED;
+  }
+
+  if (HeaderSize != 0) {
+    if (HeaderSize != Genet->SnpMode.MediaHeaderSize) {
+      DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkTransmit: Invalid parameter (header size mismatch; HeaderSize 0x%X, SnpMode.MediaHeaderSize 0x%X))\n", HeaderSize, Genet->SnpMode.MediaHeaderSize));
+      return EFI_INVALID_PARAMETER;
+    }
+    if (DestAddr == NULL || Protocol == NULL) {
+      DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkTransmit: Invalid parameter (dest addr or protocol missing)\n"));
+      return EFI_INVALID_PARAMETER;
+    }
+  }
+
+  if (BufferSize < Genet->SnpMode.MediaHeaderSize) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkTransmit: Buffer too small\n"));
+    return EFI_BUFFER_TOO_SMALL;
+  }
+
+  Status = EfiAcquireLockOrFail (&Genet->Lock);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkTransmit: Couldn't get lock: %r\n", Status));
+    return EFI_ACCESS_DENIED;
+  }
+
+  if (Genet->TxQueued == GENET_DMA_DESC_COUNT - 1) {
+    EfiReleaseLock (&Genet->Lock);
+
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkTransmit: Queue full\n"));
+    return EFI_NOT_READY;
+  }
+
+  if (HeaderSize != 0) {
+    CopyMem (&Frame[0], &DestAddr->Addr[0], NET_ETHER_ADDR_LEN);
+    CopyMem (&Frame[6], &SrcAddr->Addr[0], NET_ETHER_ADDR_LEN);
+    Frame[12] = (*Protocol & 0xFF00) >> 8;
+    Frame[13] = *Protocol & 0xFF;
+  }
+
+  Desc = Genet->TxProdIndex % GENET_DMA_DESC_COUNT;
+
+  Genet->TxBuffer[Desc] = Frame;
+
+  DmaNumberOfBytes = BufferSize;
+  Status = DmaMap (MapOperationBusMasterRead,
+                   (VOID *)(UINTN)Frame,
+                   &DmaNumberOfBytes,
+                   &DmaDeviceAddress,
+                   &DmaMapping);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((EFI_D_ERROR, "GenetSimpleNetworkTransmit: DmaMap failed: %r\n", Status));
+    EfiReleaseLock (&Genet->Lock);
+    return Status;
+  }
+
+  GenetDmaTriggerTx (Genet, Desc, DmaDeviceAddress, DmaNumberOfBytes);
+
+  DEBUG ((EFI_D_INFO, "GenetSimpleNetworkTransmit: Desc=%d VA=0x%X PA=0x%X Length=%d\n", Desc, Frame, DmaDeviceAddress, DmaNumberOfBytes));
+
+  Genet->TxProdIndex = (Genet->TxProdIndex + 1) % 0xFFFF;
+  Genet->TxQueued++;
+
+  DmaUnmap (DmaMapping);
+
+  EfiReleaseLock (&Genet->Lock);
+
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS

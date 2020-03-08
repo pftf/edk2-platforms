@@ -40,10 +40,22 @@ EFI_COMPONENT_NAME2_PROTOCOL gGenetComponentName2 = {
 };
 
 STATIC
-EFI_UNICODE_STRING_TABLE mGenetNameTable[] = {
+EFI_UNICODE_STRING_TABLE mGenetDriverNameTable[] = {
     {
         "eng;en",
-        L"SNP Broadcom GENET Driver"
+        L"Broadcom GENET Ethernet Driver"
+    },
+    {
+        NULL,
+        NULL
+    }
+};
+
+STATIC
+EFI_UNICODE_STRING_TABLE mGenetDeviceNameTable[] = {
+    {
+        "eng;en",
+        L"Broadcom GENET Ethernet"
     },
     {
         NULL,
@@ -62,7 +74,7 @@ GenetComponentNameGetDriverName (
     return LookupUnicodeString2 (
         Language,
         This->SupportedLanguages,
-        mGenetNameTable,
+        mGenetDriverNameTable,
         DriverName,
         (BOOLEAN)(This == &gGenetComponentName2)
         );
@@ -78,5 +90,15 @@ GenetComponentNameGetControllerName (
   OUT CHAR16                        **ControllerName
   )
 {
-    return EFI_UNSUPPORTED;
+    if (ChildHandle != NULL) {
+        return EFI_UNSUPPORTED;
+    }
+
+    return LookupUnicodeString2 (
+        Language,
+        This->SupportedLanguages,
+        mGenetDeviceNameTable,
+        ControllerName,
+        (BOOLEAN)(This == &gGenetComponentName2)
+        );
 }
