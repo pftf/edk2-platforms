@@ -112,7 +112,7 @@ GenetSimpleNetworkInitialize (
   GenetReset (Genet);
   GenetSetPhyMode (Genet, Genet->PhyMode);
 
-  Status = GenetPhyInit (Genet);
+  Status = GenericPhyInit (&Genet->Phy);
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -120,7 +120,7 @@ GenetSimpleNetworkInitialize (
   GenetSetMacAddress (Genet, &Genet->SnpMode.CurrentAddress);
   GenetSetPromisc (Genet, TRUE);
 
-  Status = GenetPhyUpdateConfig (Genet);
+  Status = GenericPhyUpdateConfig (&Genet->Phy);
   if (EFI_ERROR (Status)) {
     Genet->SnpMode.MediaPresent = FALSE;
   } else {
@@ -161,7 +161,7 @@ GenetSimpleNetworkReset (
     return EFI_NOT_STARTED;
   }
 
-  Status = GenetPhyReset (Genet);
+  Status = GenericPhyReset (&Genet->Phy);
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -282,17 +282,11 @@ GenetSimpleNetworkGetStatus (
     return EFI_NOT_STARTED;
   }
 
-  Status = GenetPhyUpdateConfig (Genet);
+  Status = GenericPhyUpdateConfig (&Genet->Phy);
   if (EFI_ERROR (Status)) {
     Genet->SnpMode.MediaPresent = FALSE;
   } else {
     Genet->SnpMode.MediaPresent = TRUE;
-  }
-  
-  if (InterruptStatus != NULL) {
-    // XXX
-    *InterruptStatus = 0;
-    *InterruptStatus |= EFI_SIMPLE_NETWORK_RECEIVE_INTERRUPT;
   }
 
   if (TxBuf != NULL) {

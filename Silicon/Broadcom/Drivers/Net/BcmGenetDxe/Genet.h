@@ -19,6 +19,7 @@
 #include <Library/UefiLib.h>
 
 #include "GenetReg.h"
+#include "GenericPhy.h"
 
 #define GENET_VERSION             0x0a
 
@@ -51,6 +52,8 @@ typedef struct {
 
   VOID                            *Dev;
 
+  GENERIC_PHY_PRIVATE_DATA        Phy;
+
   UINT8 *                         TxBuffer[GENET_DMA_DESC_COUNT];
   UINT8                           TxQueued;
   UINT16                          TxNext;
@@ -63,8 +66,6 @@ typedef struct {
   UINT16                          RxProdIndex;
 
   GENET_PHY_MODE                  PhyMode;
-  UINT8                           PhyAddr;
-  BOOLEAN                         PhyLinkUp;
 
   UINTN                           RegBase;
 } GENET_PRIVATE_DATA;
@@ -78,34 +79,42 @@ extern EFI_COMPONENT_NAME2_PROTOCOL           gGenetComponentName2;
 UINT32
 EFIAPI
 GenetMmioRead (
-  GENET_PRIVATE_DATA *  Genet,
-  UINT32                Offset
+  GENET_PRIVATE_DATA      *Genet,
+  UINT32                  Offset
   );
 
 VOID
 EFIAPI
 GenetMmioWrite (
-  GENET_PRIVATE_DATA *  Genet,
-  UINT32                Offset,
-  UINT32                Data
+  GENET_PRIVATE_DATA      *Genet,
+  UINT32                  Offset,
+  UINT32                  Data
   );
 
 EFI_STATUS
 EFIAPI
-GenetPhyInit (
-  IN GENET_PRIVATE_DATA * Genet
+GenetPhyRead (
+  IN VOID                 *Priv,
+  IN UINT8                PhyAddr,
+  IN UINT8                Reg,
+  OUT UINT16              *Data
   );
 
 EFI_STATUS
 EFIAPI
-GenetPhyReset (
-  IN GENET_PRIVATE_DATA * Genet
+GenetPhyWrite (
+  IN VOID                 *Priv,
+  IN UINT8                PhyAddr,
+  IN UINT8                Reg,
+  IN UINT16               Data
   );
 
-EFI_STATUS
+VOID
 EFIAPI
-GenetPhyUpdateConfig (
-  IN GENET_PRIVATE_DATA * Genet
+GenetPhyConfigure (
+  IN VOID                 *Priv,
+  IN GENERIC_PHY_SPEED    Speed,
+  IN GENERIC_PHY_DUPLEX   Duplex
   );
 
 VOID
@@ -145,14 +154,6 @@ EFIAPI
 GenetSetPromisc (
   IN GENET_PRIVATE_DATA * Genet,
   IN BOOLEAN              Enable
-  );
-
-VOID
-EFIAPI
-GenetMacUpdateConfig (
-  IN GENET_PRIVATE_DATA * Genet,
-  IN UINT16              Speed,
-  IN UINT16              Duplex
   );
 
 EFI_STATUS

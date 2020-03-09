@@ -16,6 +16,7 @@
 
 [Sources]
   ComponentName.c
+  GenericPhy.c
   Genet.c
   GenetUtil.c
   SimpleNetwork.c

@@ -6,7 +6,6 @@
 
 #include "Genet.h"
 #include "GenetReg.h"
-#include "PhyReg.h"
 
 #include <Library/ArmLib.h>
 #include <Library/DmaLib.h>
@@ -17,16 +16,12 @@
 #define __SHIFTOUT(__x, __mask)     (((__x) & (__mask)) / __LOWEST_SET_BIT(__mask))
 #define __SHIFTIN(__x, __mask)      ((__x) * __LOWEST_SET_BIT(__mask))
 
-#define GENET_PHY_RETRY             1000
-#define GENET_PHY_DELAY             10
-#define GENET_PHY_RESET_TIMEOUT     500
-#define GENET_PHY_LINK_TIMEOUT      200
-#define GENET_PHY_ANEG_TIMEOUT      200
+#define GENET_PHY_RETRY     1000
 
 UINT32
 EFIAPI
 GenetMmioRead (
-    IN GENET_PRIVATE_DATA * Genet,
+    IN GENET_PRIVATE_DATA   *Genet,
     IN UINT32               Offset
     )
 {
@@ -38,7 +33,7 @@ GenetMmioRead (
 VOID
 EFIAPI
 GenetMmioWrite (
-    IN GENET_PRIVATE_DATA * Genet,
+    IN GENET_PRIVATE_DATA   *Genet,
     IN UINT32               Offset,
     IN UINT32               Data
     )
@@ -49,15 +44,16 @@ GenetMmioWrite (
     ArmDataMemoryBarrier ();
 }
 
-STATIC
 EFI_STATUS
+EFIAPI
 GenetPhyRead (
-    IN GENET_PRIVATE_DATA * Genet,
+    IN VOID                 *Priv,
     IN UINT8                PhyAddr,
     IN UINT8                Reg,
-    OUT UINT16 *            Data
+    OUT UINT16              *Data
     )
 {
+    GENET_PRIVATE_DATA *Genet = Priv;
     UINTN Retry;
     UINT32 Value;
 
@@ -73,7 +69,7 @@ GenetPhyRead (
             *Data = Value & 0xffff;
             break;
         }
-        gBS->Stall (GENET_PHY_DELAY);
+        gBS->Stall (10);
     }
 
     if (Retry == 0) {
@@ -84,15 +80,16 @@ GenetPhyRead (
     return EFI_SUCCESS;
 }
 
-STATIC
 EFI_STATUS
+EFIAPI
 GenetPhyWrite (
-    IN GENET_PRIVATE_DATA * Genet,
+    IN VOID                 *Priv,
     IN UINT8                PhyAddr,
     IN UINT8                Reg,
     IN UINT16               Data
     )
 {
+    GENET_PRIVATE_DATA *Genet = Priv;
     UINTN Retry;
     UINT32 Value;
 
@@ -107,7 +104,7 @@ GenetPhyWrite (
         if ((Value & GENET_MDIO_START_BUSY) == 0) {
             break;
         }
-        gBS->Stall (GENET_PHY_DELAY);
+        gBS->Stall (10);
     }
 
     if (Retry == 0) {
@@ -118,274 +115,44 @@ GenetPhyWrite (
     return EFI_SUCCESS;
 }
 
-STATIC
-EFI_STATUS
-GenetPhyDetect (
-    IN GENET_PRIVATE_DATA * Genet
-    )
-{
-    EFI_STATUS Status;
-    UINT8 PhyAddr;
-    UINT16 Id[2];
-
-    for (PhyAddr = 0; PhyAddr < 32; PhyAddr++) {
-        Status = GenetPhyRead (Genet, PhyAddr, MII_PHYIDR1, &Id[0]);
-        if (EFI_ERROR (Status)) {
-            continue;
-        }
-        Status = GenetPhyRead (Genet, PhyAddr, MII_PHYIDR2, &Id[1]);
-        if (EFI_ERROR (Status)) {
-            continue;
-        }
-        if (Id[0] != 0xffff && Id[1] != 0xffff) {
-            Genet->PhyAddr = PhyAddr;
-            DEBUG ((DEBUG_INFO, "GenetPhyDetect: PHY detected at address 0x%02X (PHYIDR1=0x%04X PHYIDR2=0x%04X)\n",
-                    PhyAddr, Id[0], Id[1]));
-            return EFI_SUCCESS;
-        }
-    }
-
-    return EFI_NOT_FOUND;
-}
-
-STATIC
-EFI_STATUS
-GenetPhyAutoNegotiate (
-    IN GENET_PRIVATE_DATA * Genet
-    )
-{
-    EFI_STATUS Status;
-    UINT16 Anar, Gtcr, Bmcr;
-
-    Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_ANAR, &Anar);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-    Anar |= ANAR_TX_FD | ANAR_TX | ANAR_10_FD | ANAR_10 | ANAR_CSMA;
-    Status = GenetPhyWrite (Genet, Genet->PhyAddr, MII_ANAR, Anar);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-
-    Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_GTCR, &Gtcr);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-    Gtcr |= GTCR_ADV_1000TFDX | GTCR_ADV_1000THDX;
-    Status = GenetPhyWrite (Genet, Genet->PhyAddr, MII_GTCR, Gtcr);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-
-    Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_BMCR, &Bmcr);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-    Bmcr |= BMCR_AUTOEN | BMCR_STARTNEG;
-    return GenetPhyWrite (Genet, Genet->PhyAddr, MII_BMCR, Bmcr);
-}
-
-STATIC
-EFI_STATUS
-GenetPhyGetLinkStatus (
-    IN GENET_PRIVATE_DATA * Genet
-    )
-{
-    EFI_STATUS Status;
-    UINT16 Bmsr;
-    UINTN Retry;
-
-    Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_BMSR, &Bmsr);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-
-    if ((Bmsr & BMSR_LINK) != 0) {
-        // Link is up
-        return EFI_SUCCESS;
-    }
-
-    // Wait for link to come up
-    for (Retry = GENET_PHY_LINK_TIMEOUT; Retry > 0; Retry--) {
-        Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_BMSR, &Bmsr);
-        if (EFI_ERROR (Status)) {
-            return Status;
-        }
-
-        if ((Bmsr & BMSR_LINK) != 0) {
-            // Link is up
-            break;
-        }
-
-        gBS->Stall (1000);
-    }
-    if (Retry == 0) {
-        // Link is down
-        //DEBUG ((EFI_D_ERROR, "GenetPhyGetLinkStatus: Link is down (BMSR=0x%04X)\n", Bmsr));
-        return EFI_TIMEOUT;
-    }
-
-    // Wait for auto negotiate to complete
-    for (Retry = GENET_PHY_ANEG_TIMEOUT; Retry > 0; Retry--) {
-        Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_BMSR, &Bmsr);
-        if (EFI_ERROR (Status)) {
-            return Status;
-        }
-
-        if ((Bmsr & BMSR_ACOMP) != 0) {
-            // Auto negotiation complete
-            break;
-        }
-
-        gBS->Stall (1000);
-    }
-    if (Retry == 0) {
-        DEBUG ((EFI_D_ERROR, "GenetPhyGetLinkStatus: Error! Auto negotiation timeout (BMSR=0x%04X)\n", Bmsr));
-        return EFI_TIMEOUT;
-    }
-
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS
+VOID
 EFIAPI
-GenetPhyReset (
-    IN GENET_PRIVATE_DATA * Genet
+GenetPhyConfigure (
+    IN VOID                 *Priv,
+    IN GENERIC_PHY_SPEED    Speed,
+    IN GENERIC_PHY_DUPLEX   Duplex
     )
 {
-    EFI_STATUS Status;
-    UINTN Retry;
-    UINT16 Data;
+    GENET_PRIVATE_DATA *Genet = Priv;
+    UINT32 Value;
 
-    // Start reset sequence
-    Status = GenetPhyWrite (Genet, Genet->PhyAddr, MII_BMCR, BMCR_RESET);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
+    Value = GenetMmioRead (Genet, GENET_EXT_RGMII_OOB_CTRL);
+    Value &= ~GENET_EXT_RGMII_OOB_OOB_DISABLE;
+    Value |= GENET_EXT_RGMII_OOB_RGMII_LINK;
+    Value |= GENET_EXT_RGMII_OOB_RGMII_MODE_EN;
+    if (Genet->PhyMode == GENET_PHY_MODE_RGMII)
+        Value |= GENET_EXT_RGMII_OOB_ID_MODE_DISABLE;
+    GenetMmioWrite (Genet, GENET_EXT_RGMII_OOB_CTRL, Value);
 
-    // Wait up to 500ms for it to complete
-    for (Retry = GENET_PHY_RESET_TIMEOUT; Retry > 0; Retry--) {
-        Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_BMCR, &Data);
-        if (EFI_ERROR (Status)) {
-            return Status;
-        }
-        if ((Data & BMCR_RESET) == 0) {
+    Value = GenetMmioRead (Genet, GENET_UMAC_CMD);
+    Value &= ~GENET_UMAC_CMD_SPEED;
+    switch (Speed) {
+        case PHY_SPEED_1000:
+            Value |= __SHIFTIN(GENET_UMAC_CMD_SPEED_1000, GENET_UMAC_CMD_SPEED);
             break;
-        }
-        gBS->Stall (1000);
+        case PHY_SPEED_100:
+            Value |= __SHIFTIN(GENET_UMAC_CMD_SPEED_100, GENET_UMAC_CMD_SPEED);
+            break;
+        default:
+            Value |= __SHIFTIN(GENET_UMAC_CMD_SPEED_10, GENET_UMAC_CMD_SPEED);
+            break;
     }
-    if (Retry == 0) {
-        return EFI_TIMEOUT;
-    }
-
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS
-EFIAPI
-GenetPhyInit (
-    IN GENET_PRIVATE_DATA * Genet
-    )
-{
-    EFI_STATUS Status;
-
-    Status = GenetPhyDetect (Genet);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-
-    Status = GenetPhyReset (Genet);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-
-    return GenetPhyAutoNegotiate (Genet);
-}
-
-STATIC
-EFI_STATUS
-GenetPhyGetConfig (
-    IN GENET_PRIVATE_DATA * Genet,
-    OUT UINT16 *            Speed,
-    OUT UINT16 *            Duplex
-    )
-{
-    EFI_STATUS Status;
-    UINT16 Gtcr, Gtsr, Anlpar, Anar;
-    UINT16 Gt, An;
-
-    Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_GTCR, &Gtcr);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-    Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_GTSR, &Gtsr);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-    Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_ANLPAR, &Anlpar);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-    Status = GenetPhyRead (Genet, Genet->PhyAddr, MII_ANAR, &Anar);
-    if (EFI_ERROR (Status)) {
-        return Status;
-    }
-
-    Gt = Gtsr & (Gtcr << 2);
-    An = Anlpar & Anar;
-
-    //DEBUG ((EFI_D_INFO, "GenetPhyGetConfig: Gtsr=0x%04X Gtcr=0x%04X Gt=0x%04X\n", Gtsr, Gtcr, Gt));
-    //DEBUG ((EFI_D_INFO, "GenetPhyGetConfig: Anlpar=0x%04X Anar=0x%04X An=0x%04X\n", Anlpar, Anar, An));
-
-    if ((Gt & (GTSR_LP_1000TFDX|GTSR_LP_1000THDX)) != 0) {
-        *Speed = BMCR_S1000;
-        *Duplex = (Gt & GTSR_LP_1000TFDX) ? BMCR_FDX : 0;
-    } else if ((An & (ANLPAR_TX_FD|ANLPAR_TX)) != 0) {
-        *Speed = BMCR_S100;
-        *Duplex = (An & ANLPAR_TX_FD) ? BMCR_FDX : 0;
+    if (Duplex == PHY_DUPLEX_FULL) {
+        Value &= ~GENET_UMAC_CMD_HD_EN;
     } else {
-        *Speed = BMCR_S10;
-        *Duplex = (An & ANLPAR_10_FD) ? BMCR_FDX : 0;
+        Value |= GENET_UMAC_CMD_HD_EN;
     }
-
-    DEBUG ((EFI_D_INFO, "GenetPhyGetConfig: Link speed %d Mbps, %a-duplex\n",
-           ((*Speed == BMCR_S1000) ? 1000 : (*Speed == BMCR_S100) ? 100 : 10),
-           *Duplex == BMCR_FDX ? "full" : "half"));
-
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS
-EFIAPI
-GenetPhyUpdateConfig (
-    IN GENET_PRIVATE_DATA * Genet
-    )
-{
-    EFI_STATUS Status;
-    UINT16 Speed, Duplex;
-    BOOLEAN LinkUp;
-
-    Status = GenetPhyGetLinkStatus (Genet);
-    LinkUp = EFI_ERROR (Status) ? FALSE : TRUE;
-
-    if (Genet->PhyLinkUp != LinkUp) {
-        if (LinkUp) {
-            DEBUG ((EFI_D_INFO, "GenetPhyUpdateConfig: Link is up\n"));
-
-            Status = GenetPhyGetConfig (Genet, &Speed, &Duplex);
-            if (EFI_ERROR (Status)) {
-                return Status;
-            }
-            
-            GenetMacUpdateConfig (Genet, Speed, Duplex);
-        } else {
-            DEBUG ((EFI_D_INFO, "GenetPhyUpdateConfig: Link is down\n"));
-        }
-    }
-
-    Genet->PhyLinkUp = LinkUp;
-
-    return LinkUp ? EFI_SUCCESS : EFI_NOT_READY;
+    GenetMmioWrite (Genet, GENET_UMAC_CMD, Value);
 }
 
 VOID
@@ -547,45 +314,6 @@ GenetSetPromisc (
         Value |= GENET_UMAC_CMD_PROMISC;
     } else {
         Value &= ~GENET_UMAC_CMD_PROMISC;
-    }
-    GenetMmioWrite (Genet, GENET_UMAC_CMD, Value);
-}
-
-VOID
-EFIAPI
-GenetMacUpdateConfig (
-    IN GENET_PRIVATE_DATA * Genet,
-    IN UINT16              Speed,
-    IN UINT16              Duplex
-    )
-{
-    UINT32 Value;
-
-    Value = GenetMmioRead (Genet, GENET_EXT_RGMII_OOB_CTRL);
-    Value &= ~GENET_EXT_RGMII_OOB_OOB_DISABLE;
-    Value |= GENET_EXT_RGMII_OOB_RGMII_LINK;
-    Value |= GENET_EXT_RGMII_OOB_RGMII_MODE_EN;
-    if (Genet->PhyMode == GENET_PHY_MODE_RGMII)
-        Value |= GENET_EXT_RGMII_OOB_ID_MODE_DISABLE;
-    GenetMmioWrite (Genet, GENET_EXT_RGMII_OOB_CTRL, Value);
-
-    Value = GenetMmioRead (Genet, GENET_UMAC_CMD);
-    Value &= ~GENET_UMAC_CMD_SPEED;
-    switch (Speed) {
-        case BMCR_S1000:
-            Value |= __SHIFTIN(GENET_UMAC_CMD_SPEED_1000, GENET_UMAC_CMD_SPEED);
-            break;
-        case BMCR_S100:
-            Value |= __SHIFTIN(GENET_UMAC_CMD_SPEED_100, GENET_UMAC_CMD_SPEED);
-            break;
-        default:
-            Value |= __SHIFTIN(GENET_UMAC_CMD_SPEED_10, GENET_UMAC_CMD_SPEED);
-            break;
-    }
-    if (Duplex == BMCR_FDX) {
-        Value &= ~GENET_UMAC_CMD_HD_EN;
-    } else {
-        Value |= GENET_UMAC_CMD_HD_EN;
     }
     GenetMmioWrite (Genet, GENET_UMAC_CMD, Value);
 }

@@ -139,8 +139,11 @@ GenetDriverBindingStart (
 
   Genet->Signature = GENET_DRIVER_SIGNATURE;
   Genet->RegBase = FixedPcdGet64 (PcdBcmGenetRegistersAddress);
+  Genet->Phy.PrivateData = Genet;
+  Genet->Phy.Read = GenetPhyRead;
+  Genet->Phy.Write = GenetPhyWrite;
+  Genet->Phy.Configure = GenetPhyConfigure;
   Genet->PhyMode = GENET_PHY_MODE_RGMII;
-  Genet->PhyLinkUp = FALSE;
   EfiInitializeLock (&Genet->Lock, TPL_CALLBACK);
   Genet->Snp = gGenetSimpleNetwork;
   Genet->Snp.Mode = &Genet->SnpMode;
