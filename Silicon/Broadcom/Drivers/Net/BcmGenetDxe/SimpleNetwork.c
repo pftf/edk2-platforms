@@ -291,9 +291,6 @@ GenetSimpleNetworkGetStatus (
 
   if (TxBuf != NULL) {
     GenetTxIntr (Genet, TxBuf);
-    if (*TxBuf != NULL) {
-      DEBUG ((EFI_D_INFO, "GenetSimpleNetworkGetStatus: VA=0x%X\n", *TxBuf));
-    }
   }
 
   return EFI_SUCCESS;
