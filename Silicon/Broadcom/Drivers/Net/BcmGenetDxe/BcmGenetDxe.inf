@@ -1,5 +1,6 @@
 ## @file
 #
+# Copyright (c) 2020, Jared McNeill All rights reserved.<BR>
 # Copyright (c) 2020, Jeremy Linton All rights reserved.<BR>
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -10,15 +11,15 @@
   INF_VERSION                    = 0x0001001A
   BASE_NAME                      = BcmGenetDxe
   FILE_GUID                      = e2b1eaf3-50b7-4ae1-b79e-ec8020cb57ac
-  MODULE_TYPE                    = DXE_RUNTIME_DRIVER
+  MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = GenetEntryPoint
 
 [Sources]
   ComponentName.c
+  DriverBinding.c
   GenericPhy.c
   Genet.c
-  GenetUtil.c
   SimpleNetwork.c
 
 [Packages]

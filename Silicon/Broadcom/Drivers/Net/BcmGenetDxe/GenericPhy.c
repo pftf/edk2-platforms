@@ -40,14 +40,14 @@ GenericPhyWrite (
 }
 
 STATIC
-EFI_STATUS
+VOID
 GenericPhyConfigure (
     IN GENERIC_PHY_PRIVATE_DATA *Phy,
     IN GENERIC_PHY_SPEED        Speed,
     IN GENERIC_PHY_DUPLEX       Duplex
     )
 {
-    return Phy->Configure (Phy->PrivateData, Speed, Duplex);
+    Phy->Configure (Phy->PrivateData, Speed, Duplex);
 }
 
 STATIC
@@ -121,7 +121,6 @@ GenericPhyAutoNegotiate (
             GENERIC_PHY_BMCR_RESTART_AN;
     return GenericPhyWrite (Phy, Phy->PhyAddr, GENERIC_PHY_BMCR, Bmcr);
 }
-
 
 EFI_STATUS
 EFIAPI

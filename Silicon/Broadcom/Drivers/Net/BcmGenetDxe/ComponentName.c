@@ -1,8 +1,7 @@
 /** @file
-  <<BriefDescription>>
-  <<DetailedDescription>>
-  <<Copyright>>
-  <<License>>
+  Copyright (c) 2020 Jared McNeill. All rights reserved.
+
+  SPDX-License-Identifier: BSD-2-Clause
 **/
 
 #include "Genet.h"
