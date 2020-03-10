@@ -407,8 +407,6 @@ GenetDmaAlloc (
             GenetDmaFree (Genet);
             return Status;
         }
-        
-        SetMem (Genet->RxBuffer[n], GENET_MAX_PACKET_SIZE, 0x5a);
     }
 
     return EFI_SUCCESS;
