@@ -215,7 +215,9 @@ GenetDriverBindingStop (
     return Status;
   }
 
-  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS(This);
+  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS(SnpProtocol);
+  
+  ASSERT (Genet->ControllerHandle == ControllerHandle);
 
   Status = gBS->UninstallMultipleProtocolInterfaces (ControllerHandle,
                                                      &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
@@ -226,10 +228,15 @@ GenetDriverBindingStop (
   }
 
   GenetDmaFree (Genet);
+  
+  gBS->CloseProtocol (ControllerHandle,
+                      &gEfiCallerIdGuid,
+                      This->DriverBindingHandle,
+                      ControllerHandle);
 
-  FreePages (Genet, EFI_SIZE_TO_PAGES (sizeof (GENET_PRIVATE_DATA)));
+  FreePool (Genet);
 
-  return Status;
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
