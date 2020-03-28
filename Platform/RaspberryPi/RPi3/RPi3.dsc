@@ -218,6 +218,10 @@
 ###################################################################################################
 
 [BuildOptions]
+  GCC:*_*_*_CC_FLAGS          = -DRPI_MODEL=3
+  GCC:*_*_*_ASLPP_FLAGS       = -DRPI_MODEL=3
+  GCC:*_*_*_ASLCC_FLAGS       = -DRPI_MODEL=3
+  GCC:*_*_*_VFRPP_FLAGS       = -DRPI_MODEL=3
   GCC:*_*_AARCH64_DLINK_FLAGS = -Wl,--fix-cortex-a53-843419
   GCC:RELEASE_*_*_CC_FLAGS    = -DMDEPKG_NDEBUG -DNDEBUG
 
@@ -328,8 +332,8 @@
   gEmbeddedTokenSpaceGuid.PcdInterruptBaseAddress|0x40000000
   gArmTokenSpaceGuid.PcdArmArchTimerSecIntrNum|0x0
   gArmTokenSpaceGuid.PcdArmArchTimerIntrNum|0x1
-  gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum|0x2
-  gArmTokenSpaceGuid.PcdArmArchTimerHypIntrNum|0x3
+  gArmTokenSpaceGuid.PcdArmArchTimerVirtIntrNum|0x3
+  gArmTokenSpaceGuid.PcdArmArchTimerHypIntrNum|0x2
 
 [LibraryClasses.common]
   ArmLib|ArmPkg/Library/ArmLib/ArmBaseLib.inf
@@ -342,6 +346,7 @@
   PlatformBootManagerLib|Platform/RaspberryPi/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
   FileExplorerLib|MdeModulePkg/Library/FileExplorerLib/FileExplorerLib.inf
+  AcpiLib|EmbeddedPkg/Library/AcpiLib/AcpiLib.inf
 
 [LibraryClasses.common.UEFI_DRIVER]
   UefiScsiLib|MdePkg/Library/UefiScsiLib/UefiScsiLib.inf
@@ -391,6 +396,22 @@
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate|115200
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultReceiveFifoDepth|0
 
+  #
+  # Fixed CPU settings.
+  #
+  gRaspberryPiTokenSpaceGuid.PcdCpuLowSpeedMHz|600
+  gRaspberryPiTokenSpaceGuid.PcdCpuDefSpeedMHz|1200
+  gRaspberryPiTokenSpaceGuid.PcdCpuMaxSpeedMHz|1500
+
+  #
+  # ARM General Interrupt Controller
+  #
+  gArmTokenSpaceGuid.PcdGicInterruptInterfaceBase|0x40000000
+  gRaspberryPiTokenSpaceGuid.PcdGicPmuIrq0|0x09
+  gRaspberryPiTokenSpaceGuid.PcdGicPmuIrq1|0x09
+  gRaspberryPiTokenSpaceGuid.PcdGicPmuIrq2|0x09
+  gRaspberryPiTokenSpaceGuid.PcdGicPmuIrq3|0x09
+
   ## Default Terminal Type
   ## 0-PCANSI, 1-VT100, 2-VT00+, 3-UTF8, 4-TTYTERM
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType|4
@@ -407,8 +428,8 @@
   # Clock overrides.
   #
 
-  gRaspberryPiTokenSpaceGuid.PcdCpuClock|L"CpuClock"|gConfigDxeFormSetGuid|0x0|0
-  gRaspberryPiTokenSpaceGuid.PcdCustomCpuClock|L"CustomCpuClock"|gConfigDxeFormSetGuid|0x0|600
+  gRaspberryPiTokenSpaceGuid.PcdCpuClock|L"CpuClock"|gConfigDxeFormSetGuid|0x0|1
+  gRaspberryPiTokenSpaceGuid.PcdCustomCpuClock|L"CustomCpuClock"|gConfigDxeFormSetGuid|0x0|gRaspberryPiTokenSpaceGuid.PcdCpuDefSpeedMHz
 
   #
   # SD-related.
@@ -431,8 +452,19 @@
   #
   # Display-related.
   #
-  gRaspberryPiTokenSpaceGuid.PcdDisplayEnableScaledVModes|L"DisplayEnableScaledVModes"|gConfigDxeFormSetGuid|0x0|0xff
+  gRaspberryPiTokenSpaceGuid.PcdDisplayEnableScaledVModes|L"DisplayEnableScaledVModes"|gConfigDxeFormSetGuid|0x0|0x3f
   gRaspberryPiTokenSpaceGuid.PcdDisplayEnableSShot|L"DisplayEnableSShot"|gConfigDxeFormSetGuid|0x0|1
+
+  #
+  # Supporting > 3GB of memory.
+  #
+  gRaspberryPiTokenSpaceGuid.PcdRamMoreThan3GB|L"RamMoreThan3GB"|gConfigDxeFormSetGuid|0x0|0
+  gRaspberryPiTokenSpaceGuid.PcdRamLimitTo3GB|L"RamLimitTo3GB"|gConfigDxeFormSetGuid|0x0|0
+
+  #
+  # Device Tree
+  #
+  gRaspberryPiTokenSpaceGuid.PcdOptDeviceTree|L"OptDeviceTree"|gConfigDxeFormSetGuid|0x0|1
 
   #
   # Common UEFI ones.
@@ -544,9 +576,8 @@
   # ACPI Support
   #
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
-  MdeModulePkg/Universal/Acpi/AcpiPlatformDxe/AcpiPlatformDxe.inf
   MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/AcpiTables/AcpiTables.inf
+  Platform/RaspberryPi/AcpiTables/AcpiTables.inf
 
   #
   # SMBIOS Support

@@ -8,23 +8,38 @@
  **/
 
 #include <Uefi.h>
+#include <Library/AcpiLib.h>
 #include <Library/HiiLib.h>
 #include <Library/DebugLib.h>
+#include <Library/DxeServicesTableLib.h>
 #include <Library/IoLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/DevicePathLib.h>
 #include <IndustryStandard/RpiMbox.h>
+#include <IndustryStandard/Bcm2711.h>
 #include <IndustryStandard/Bcm2836.h>
 #include <IndustryStandard/Bcm2836Gpio.h>
 #include <Library/GpioLib.h>
 #include <Protocol/RpiFirmware.h>
 #include "ConfigDxeFormSetGuid.h"
 
+#define FREQ_1_MHZ 1000000
+
 extern UINT8 ConfigDxeHiiBin[];
 extern UINT8 ConfigDxeStrings[];
 
 STATIC RASPBERRY_PI_FIRMWARE_PROTOCOL *mFwProtocol;
+STATIC UINT32 mModelFamily = 0;
+STATIC UINT32 mModelInstalledMB = 0;
+
+/*
+ * The GUID inside Platform/RaspberryPi/RPi3/AcpiTables/AcpiTables.inf and
+ * Platform/RaspberryPi/RPi4/AcpiTables/AcpiTables.inf _must_ match below.
+ */
+STATIC CONST EFI_GUID mAcpiTableFile = {
+  0x7E374E25, 0x8E01, 0x4FEE, { 0x87, 0xf2, 0x39, 0x0C, 0x23, 0xC6, 0x06, 0xCD }
+};
 
 typedef struct {
   VENDOR_DEVICE_PATH VendorDevicePath;
@@ -118,6 +133,32 @@ SetupVariables (
                             NULL, &Size, &Var32);
   if (EFI_ERROR (Status)) {
     PcdSet32 (PcdCustomCpuClock, PcdGet32 (PcdCustomCpuClock));
+  }
+
+  if (mModelFamily >= 4 && mModelInstalledMB > 3 * 1024) {
+    /*
+     * This allows changing PcdRamLimitTo3GB in forms.
+     */
+    PcdSet32 (PcdRamMoreThan3GB, 1);
+
+    Size = sizeof (UINT32);
+    Status = gRT->GetVariable (L"RamLimitTo3GB",
+                               &gConfigDxeFormSetGuid,
+                               NULL, &Size, &Var32);
+    if (EFI_ERROR (Status)) {
+      PcdSet32 (PcdRamLimitTo3GB, PcdGet32 (PcdRamLimitTo3GB));
+    }
+  } else {
+    PcdSet32 (PcdRamMoreThan3GB, 0);
+    PcdSet32 (PcdRamLimitTo3GB, 0);
+  }
+
+  Size = sizeof (UINT32);
+  Status = gRT->GetVariable (L"OptDeviceTree",
+                  &gConfigDxeFormSetGuid,
+                  NULL, &Size, &Var32);
+  if (EFI_ERROR (Status)) {
+    PcdSet32 (PcdOptDeviceTree, PcdGet32 (PcdOptDeviceTree));
   }
 
   Size = sizeof (UINT32);
@@ -215,30 +256,37 @@ ApplyVariables (
   UINT32 CpuClock = PcdGet32 (PcdCpuClock);
   UINT32 CustomCpuClock = PcdGet32 (PcdCustomCpuClock);
   UINT32 Rate = 0;
-  UINT32 ModelFamily = 0;
+  UINT64 SystemMemorySize;
 
-  if (CpuClock != 0) {
-    if (CpuClock == 2) {
-      /*
-       * Maximum: 1.2GHz on RPi 3, 1.4GHz on RPi 3B+, unless
-       * overridden with arm_freq=xxx in config.txt.
-       */
-      Status = mFwProtocol->GetMaxClockRate (RPI_MBOX_CLOCK_RATE_ARM, &Rate);
-      if (Status != EFI_SUCCESS) {
-        DEBUG ((DEBUG_ERROR, "Couldn't get the max CPU speed, leaving as is: %r\n", Status));
-      }
-    } else if (CpuClock == 3) {
-      Rate = CustomCpuClock * 1000000;
-    } else {
-      Rate = 600 * 1000000;
+  switch (CpuClock) {
+  case 0: // Low
+    Rate = FixedPcdGet32 (PcdCpuLowSpeedMHz) * FREQ_1_MHZ;
+    break;
+  case 1: // Default
+    /*
+     * What the Raspberry Pi Foundation calls "max clock rate" is really the default value
+     * from: https://www.raspberrypi.org/documentation/configuration/config-txt/overclocking.md
+     */
+    Status = mFwProtocol->GetMaxClockRate (RPI_MBOX_CLOCK_RATE_ARM, &Rate);
+    if (Status != EFI_SUCCESS) {
+      DEBUG ((DEBUG_ERROR, "Couldn't read default CPU speed %r\n", Status));
     }
+    break;
+  case 2: // Max
+    Rate = FixedPcdGet32 (PcdCpuMaxSpeedMHz) * FREQ_1_MHZ;
+    break;
+  case 3: // Custom
+    Rate = CustomCpuClock * FREQ_1_MHZ;
+    break;
   }
 
   if (Rate != 0) {
-    DEBUG ((DEBUG_INFO, "Setting CPU speed to %uHz\n", Rate));
+    DEBUG ((DEBUG_INFO, "Setting CPU speed to %u MHz\n", Rate / FREQ_1_MHZ));
     Status = mFwProtocol->SetClockRate (RPI_MBOX_CLOCK_RATE_ARM, Rate, 1);
     if (Status != EFI_SUCCESS) {
       DEBUG ((DEBUG_ERROR, "Couldn't set the CPU speed: %r\n", Status));
+    } else {
+      PcdSet32 (PcdCustomCpuClock, Rate / FREQ_1_MHZ);
     }
   }
 
@@ -246,18 +294,35 @@ ApplyVariables (
   if (Status != EFI_SUCCESS) {
     DEBUG ((DEBUG_ERROR, "Couldn't get the CPU speed: %r\n", Status));
   } else {
-    DEBUG ((DEBUG_INFO, "Current CPU speed is %uHz\n", Rate));
+    DEBUG ((DEBUG_INFO, "Current CPU speed is %u MHz\n", Rate / FREQ_1_MHZ));
   }
 
-  Status = mFwProtocol->GetModelFamily (&ModelFamily);
-  if (Status != EFI_SUCCESS) {
-    DEBUG ((DEBUG_ERROR, "Couldn't get the Raspberry Pi model family: %r\n", Status));
-  } else {
-    DEBUG ((DEBUG_INFO, "Current Raspberry Pi model family is 0x%x\n", ModelFamily));
+  if (mModelFamily >= 4 && PcdGet32 (PcdRamMoreThan3GB) != 0 &&
+      PcdGet32 (PcdRamLimitTo3GB) == 0) {
+    /*
+     * Similar to how we compute the > 3 GB RAM segment's size in PlatformLib/
+     * RaspberryPiMem.c, with some overlap protection for the Bcm2xxx register
+     * spaces. This computation should also work for models with more than 4 GB
+     * RAM, if there ever exist ones.
+     */
+    SystemMemorySize = (UINT64)mModelInstalledMB * SIZE_1MB;
+    ASSERT (SystemMemorySize > 3UL * SIZE_1GB);
+    SystemMemorySize = MIN(SystemMemorySize, BCM2836_SOC_REGISTERS);
+    if (BCM2711_SOC_REGISTERS > 0) {
+      SystemMemorySize = MIN(SystemMemorySize, BCM2711_SOC_REGISTERS);
+    }
+
+    Status = gDS->AddMemorySpace (EfiGcdMemoryTypeSystemMemory, 3UL * BASE_1GB,
+                    SystemMemorySize - (3UL * SIZE_1GB),
+                    EFI_MEMORY_UC | EFI_MEMORY_WC | EFI_MEMORY_WT | EFI_MEMORY_WB);
+    ASSERT_EFI_ERROR (Status);
+    Status = gDS->SetMemorySpaceAttributes (3UL * BASE_1GB,
+                    SystemMemorySize - (3UL * SIZE_1GB),
+                    EFI_MEMORY_WB);
+    ASSERT_EFI_ERROR (Status);
   }
 
-
-  if (ModelFamily == 3) {
+  if (mModelFamily == 3) {
     /*
      * Pi 3: either Arasan or SdHost goes to SD card.
      *
@@ -307,7 +372,7 @@ ApplyVariables (
     GpioPinFuncSet (52, Gpio48Group);
     GpioPinFuncSet (53, Gpio48Group);
 
-  } else if (ModelFamily == 4) {
+  } else if (mModelFamily == 4) {
     /*
      * Pi 4: either Arasan or eMMC2 goes to SD card.
      */
@@ -343,7 +408,7 @@ ApplyVariables (
       GpioPinFuncSet (39, GPIO_FSEL_ALT3);
     }
   } else {
-    DEBUG ((DEBUG_ERROR, "Model Family %d not supported...\n", ModelFamily));
+    DEBUG ((DEBUG_ERROR, "Model Family %d not supported...\n", mModelFamily));
   }
 
   /*
@@ -391,6 +456,20 @@ ConfigInitialize (
     return Status;
   }
 
+  Status = mFwProtocol->GetModelFamily (&mModelFamily);
+  if (Status != EFI_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "Couldn't get the Raspberry Pi model family: %r\n", Status));
+  } else {
+    DEBUG ((DEBUG_INFO, "Current Raspberry Pi model family is %d\n", mModelFamily));
+  }
+
+  Status = mFwProtocol->GetModelInstalledMB (&mModelInstalledMB);
+  if (Status != EFI_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "Couldn't get the Raspberry Pi installed RAM size: %r\n", Status));
+  } else {
+    DEBUG ((DEBUG_INFO, "Current Raspberry Pi installed RAM size is %d MB\n", mModelInstalledMB));
+  }
+
   Status = SetupVariables ();
   if (Status != EFI_SUCCESS) {
     DEBUG ((DEBUG_ERROR, "Couldn't not setup NV vars: %r\n", Status));
@@ -407,6 +486,9 @@ ConfigInitialize (
   if (Status != EFI_SUCCESS) {
     DEBUG ((DEBUG_ERROR, "Couldn't install ConfigDxe configuration pages: %r\n", Status));
   }
+
+  Status = LocateAndInstallAcpiFromFv (&mAcpiTableFile);
+  ASSERT_EFI_ERROR (Status);
 
   return EFI_SUCCESS;
 }

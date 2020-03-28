@@ -33,7 +33,7 @@ typedef struct {
   // An array with MicrocodeCount elements that stores
   // the shadowed microcode patch address in memory.
   //
-  UINT64    MicrocodeAddrInMemory[];
+  UINT64    MicrocodeAddrInMemory[0];
   //
   // A buffer which contains details about the storage information
   // specific to StorageType.
@@ -58,7 +58,7 @@ typedef struct {
   // microcode patch address on flash. The address is placed in same
   // order as the microcode patches in MicrocodeAddrInMemory.
   //
-  UINT64  MicrocodeAddressInFlash[];
+  UINT64  MicrocodeAddressInFlash[0];
 } EFI_MICROCODE_STORAGE_TYPE_FLASH_CONTEXT;
 
 #endif

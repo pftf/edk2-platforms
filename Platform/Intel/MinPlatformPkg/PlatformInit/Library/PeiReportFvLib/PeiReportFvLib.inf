@@ -1,7 +1,7 @@
 ### @file
 # Component information file for the Report Firmware Volume (FV) library.
 #
-# Copyright (c) 2018 - 2019, Intel Corporation. All rights reserved.<BR>
+# Copyright (c) 2018 - 2020, Intel Corporation. All rights reserved.<BR>
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -34,12 +34,8 @@
   gMinPlatformPkgTokenSpaceGuid.PcdFspWrapperBootMode             ## CONSUMES
   gMinPlatformPkgTokenSpaceGuid.PcdFlashAreaBaseAddress           ## CONSUMES
   gMinPlatformPkgTokenSpaceGuid.PcdFlashAreaSize                  ## CONSUMES
-  gMinPlatformPkgTokenSpaceGuid.PcdFlashFvFspMBase                ## CONSUMES
-  gMinPlatformPkgTokenSpaceGuid.PcdFlashFvFspMSize                ## CONSUMES
-  gMinPlatformPkgTokenSpaceGuid.PcdFlashFvFspSBase                ## CONSUMES
-  gMinPlatformPkgTokenSpaceGuid.PcdFlashFvFspSSize                ## CONSUMES
-  gMinPlatformPkgTokenSpaceGuid.PcdFlashFvFspUBase                ## CONSUMES
-  gMinPlatformPkgTokenSpaceGuid.PcdFlashFvFspUSize                ## CONSUMES
+  gMinPlatformPkgTokenSpaceGuid.PcdFlashFvFspTBase                ## CONSUMES
+  gMinPlatformPkgTokenSpaceGuid.PcdFlashFvFspTSize                ## CONSUMES
   gMinPlatformPkgTokenSpaceGuid.PcdFlashFvPostMemoryBase          ## CONSUMES
   gMinPlatformPkgTokenSpaceGuid.PcdFlashFvPostMemorySize          ## CONSUMES
   gMinPlatformPkgTokenSpaceGuid.PcdFlashFvUefiBootBase            ## CONSUMES

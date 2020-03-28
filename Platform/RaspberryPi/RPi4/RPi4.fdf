@@ -25,11 +25,11 @@
 
 [FD.RPI_EFI]
 BaseAddress   = 0x00000000|gArmTokenSpaceGuid.PcdFdBaseAddress
-Size          = 0x00200000|gArmTokenSpaceGuid.PcdFdSize
+Size          = 0x001f0000|gArmTokenSpaceGuid.PcdFdSize
 ErasePolarity = 1
 
 BlockSize     = 0x00001000|gRaspberryPiTokenSpaceGuid.PcdFirmwareBlockSize
-NumBlocks     = 0x200
+NumBlocks     = 0x1f0
 
 ################################################################################
 #
@@ -51,18 +51,12 @@ NumBlocks     = 0x200
 # ATF primary boot image
 #
 0x00000000|0x00020000
-FILE = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmware/bl31_pl011.bin
-
-#
-# DTB.
-#
-0x00020000|0x00010000
-DATA = { 0x00 }
+FILE = $(TFA_BUILD_BL31)
 
 #
 # UEFI image
 #
-0x00030000|0x001b0000
+0x00020000|0x001b0000
 gArmTokenSpaceGuid.PcdFvBaseAddress|gArmTokenSpaceGuid.PcdFvSize
 FV = FVMAIN_COMPACT
 
@@ -76,7 +70,7 @@ FV = FVMAIN_COMPACT
 #
 
 # NV_VARIABLE_STORE
-0x001e0000|0x0000e000
+0x001d0000|0x0000e000
 gRaspberryPiTokenSpaceGuid.PcdNvStorageVariableBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
 
 DATA = {
@@ -119,11 +113,11 @@ DATA = {
 }
 
 # NV_EVENT_LOG
-0x001ee000|0x00001000
+0x001de000|0x00001000
 gRaspberryPiTokenSpaceGuid.PcdNvStorageEventLogBase|gRaspberryPiTokenSpaceGuid.PcdNvStorageEventLogSize
 
 # NV_FTW_WORKING header
-0x001ef000|0x00001000
+0x001df000|0x00001000
 gRaspberryPiTokenSpaceGuid.PcdNvStorageFtwWorkingBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
 
 DATA = {
@@ -138,7 +132,7 @@ DATA = {
 }
 
 # NV_FTW_WORKING data
-0x001f0000|0x00010000
+0x001e0000|0x00010000
 gRaspberryPiTokenSpaceGuid.PcdNvStorageFtwSpareBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
 
 ################################################################################
@@ -208,9 +202,7 @@ READ_LOCK_STATUS   = TRUE
 
   INF ArmPkg/Drivers/ArmGic/ArmGicDxe.inf
   INF Platform/RaspberryPi/Drivers/RpiFirmwareDxe/RpiFirmwareDxe.inf
-!if $(ACPI_BASIC_MODE_ENABLE) == FALSE
   INF Platform/RaspberryPi/Drivers/FdtDxe/FdtDxe.inf
-!endif
   INF Platform/RaspberryPi/Drivers/ConfigDxe/ConfigDxe.inf
   INF ArmPkg/Drivers/TimerDxe/TimerDxe.inf
   INF MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
@@ -236,9 +228,8 @@ READ_LOCK_STATUS   = TRUE
   # ACPI Support
   #
   INF MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
-  INF MdeModulePkg/Universal/Acpi/AcpiPlatformDxe/AcpiPlatformDxe.inf
   INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  INF RuleOverride = ACPITABLE Platform/RaspberryPi/$(PLATFORM_NAME)/AcpiTables/AcpiTables.inf
+  INF RuleOverride = ACPITABLE Platform/RaspberryPi/AcpiTables/AcpiTables.inf
 
   #
   # SMBIOS Support

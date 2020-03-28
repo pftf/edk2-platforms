@@ -12,6 +12,8 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 
+#include <Net/Genet.h>
+
 #include "GenetUtil.h"
 #include "SimpleNetwork.h"
 
@@ -138,7 +140,7 @@ GenetDriverBindingStart (
   }
 
   Genet->Signature = GENET_DRIVER_SIGNATURE;
-  Genet->RegBase = FixedPcdGet64 (PcdBcmGenetRegistersAddress);
+  Genet->RegBase = GENET_BASE_ADDRESS;
   Genet->Phy.PrivateData = Genet;
   Genet->Phy.Read = GenetPhyRead;
   Genet->Phy.Write = GenetPhyWrite;

@@ -26,19 +26,26 @@
   FLASH_DEFINITION               = Platform/RaspberryPi/$(PLATFORM_NAME)/$(PLATFORM_NAME).fdf
 
   #
-  # Network definition
-  #
-  DEFINE NETWORK_TLS_ENABLE       = FALSE
-  DEFINE NETWORK_HTTP_BOOT_ENABLE = FALSE
-
-  #
   # Defines for default states.  These can be changed on the command line.
   # -D FLAG=VALUE
   #
   DEFINE SECURE_BOOT_ENABLE      = FALSE
   DEFINE INCLUDE_TFTP_COMMAND    = FALSE
   DEFINE DEBUG_PRINT_ERROR_LEVEL = 0x8000004F
-  DEFINE ACPI_BASIC_MODE_ENABLE  = FALSE
+
+!ifndef TFA_BUILD_ARTIFACTS
+  #
+  # Default TF-A binary checked into edk2-non-osi.
+  #
+  DEFINE TFA_BUILD_BL31 = Platform/RaspberryPi/$(PLATFORM_NAME)/TrustedFirmware/bl31_pl011.bin
+!else
+  #
+  # Usually we use the checked-in binaries, but for developers working
+  # on the firmware, being able to use a local TF-A build without extra copy
+  # operations ends up being very helpful.
+  #
+  DEFINE TFA_BUILD_BL31 = $(TFA_BUILD_ARTIFACTS)/bl31.bin
+!endif
 
 ################################################################################
 #
@@ -126,6 +133,7 @@
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
+  TlsLib|CryptoPkg/Library/TlsLib/TlsLib.inf
 
   #
   # Uncomment (and comment out the next line) For RealView Debugger. The Standard IO window
@@ -229,6 +237,10 @@
 ###################################################################################################
 
 [BuildOptions]
+  GCC:*_*_*_CC_FLAGS          = -DRPI_MODEL=4
+  GCC:*_*_*_ASLPP_FLAGS       = -DRPI_MODEL=4
+  GCC:*_*_*_ASLCC_FLAGS       = -DRPI_MODEL=4
+  GCC:*_*_*_VFRPP_FLAGS       = -DRPI_MODEL=4
   GCC:*_*_AARCH64_DLINK_FLAGS = -Wl,--fix-cortex-a53-843419
   GCC:RELEASE_*_*_CC_FLAGS    = -DMDEPKG_NDEBUG -DNDEBUG
 
@@ -253,8 +265,6 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutGopSupport|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutUgaSupport|FALSE
 
-  gRaspberryPiTokenSpaceGuid.PcdAcpiBasicMode|$(ACPI_BASIC_MODE_ENABLE)
-
 [PcdsFixedAtBuild.common]
   gEfiMdePkgTokenSpaceGuid.PcdMaximumUnicodeStringLength|1000000
   gEfiMdePkgTokenSpaceGuid.PcdMaximumAsciiStringLength|1000000
@@ -264,7 +274,10 @@
   gEfiMdePkgTokenSpaceGuid.PcdPerformanceLibraryPropertyMask|1
   gEfiMdePkgTokenSpaceGuid.PcdPostCodePropertyMask|0
   gEfiMdePkgTokenSpaceGuid.PcdUefiLibMaxPrintBufferSize|320
-  gRaspberryPiTokenSpaceGuid.PcdFdtBaseAddress|0x20000
+  #
+  # Follows right after the FD image.
+  #
+  gRaspberryPiTokenSpaceGuid.PcdFdtBaseAddress|0x001f0000
 
   # DEBUG_ASSERT_ENABLED       0x01
   # DEBUG_PRINT_ENABLED        0x02
@@ -340,6 +353,8 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdRemovableMediaImageVerificationPolicy|0x04
 !endif
 
+  gEfiNetworkPkgTokenSpaceGuid.PcdAllowHttpConnections|TRUE
+
 [LibraryClasses.common]
   ArmLib|ArmPkg/Library/ArmLib/ArmBaseLib.inf
   ArmMmuLib|ArmPkg/Library/ArmMmuLib/ArmMmuBaseLib.inf
@@ -351,6 +366,7 @@
   PlatformBootManagerLib|Platform/RaspberryPi/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
   CustomizedDisplayLib|MdeModulePkg/Library/CustomizedDisplayLib/CustomizedDisplayLib.inf
   FileExplorerLib|MdeModulePkg/Library/FileExplorerLib/FileExplorerLib.inf
+  AcpiLib|EmbeddedPkg/Library/AcpiLib/AcpiLib.inf
 
 [LibraryClasses.common.UEFI_DRIVER]
   UefiScsiLib|MdePkg/Library/UefiScsiLib/UefiScsiLib.inf
@@ -377,11 +393,12 @@
   # Size of the region used by UEFI in permanent memory (Reserved 64MB)
   gArmPlatformTokenSpaceGuid.PcdSystemMemoryUefiRegionSize|0x04000000
   #
-  # This matches PcdFvBaseAddress, since everything less is ATF, and
-  # will be reserved away.
+  # 0x00000000 - 0x001F0000  FD (PcdFdBaseAddress, PcdFdSize)
+  # 0x001F0000 - 0x00200000 DTB (PcdFdtBaseAddress, PcdFdtSize)
+  # 0x00200000 - ...        RAM (PcdSystemMemoryBase, PcdSystemMemorySize)
   #
-  gArmTokenSpaceGuid.PcdSystemMemoryBase|0x00400000
-  gArmTokenSpaceGuid.PcdSystemMemorySize|0x3fc00000
+  gArmTokenSpaceGuid.PcdSystemMemoryBase|0x00200000
+  gArmTokenSpaceGuid.PcdSystemMemorySize|0x3fe00000
 
   #
   # Device specific addresses
@@ -414,6 +431,20 @@
   #
   gArmTokenSpaceGuid.PcdGicDistributorBase|0xFF841000
   gArmTokenSpaceGuid.PcdGicInterruptInterfaceBase|0xFF842000
+  gRaspberryPiTokenSpaceGuid.PcdGicInterruptInterfaceHBase|0xFF844000
+  gRaspberryPiTokenSpaceGuid.PcdGicInterruptInterfaceVBase|0xFF846000
+  gRaspberryPiTokenSpaceGuid.PcdGicGsivId|0x19
+  gRaspberryPiTokenSpaceGuid.PcdGicPmuIrq0|0x30
+  gRaspberryPiTokenSpaceGuid.PcdGicPmuIrq1|0x31
+  gRaspberryPiTokenSpaceGuid.PcdGicPmuIrq2|0x32
+  gRaspberryPiTokenSpaceGuid.PcdGicPmuIrq3|0x33
+
+  #
+  # Fixed CPU settings.
+  #
+  gRaspberryPiTokenSpaceGuid.PcdCpuLowSpeedMHz|800
+  gRaspberryPiTokenSpaceGuid.PcdCpuDefSpeedMHz|1500
+  gRaspberryPiTokenSpaceGuid.PcdCpuMaxSpeedMHz|2200
 
   ## Default Terminal Type
   ## 0-PCANSI, 1-VT100, 2-VT00+, 3-UTF8, 4-TTYTERM
@@ -431,8 +462,8 @@
   # Clock overrides.
   #
 
-  gRaspberryPiTokenSpaceGuid.PcdCpuClock|L"CpuClock"|gConfigDxeFormSetGuid|0x0|0
-  gRaspberryPiTokenSpaceGuid.PcdCustomCpuClock|L"CustomCpuClock"|gConfigDxeFormSetGuid|0x0|600
+  gRaspberryPiTokenSpaceGuid.PcdCpuClock|L"CpuClock"|gConfigDxeFormSetGuid|0x0|1
+  gRaspberryPiTokenSpaceGuid.PcdCustomCpuClock|L"CustomCpuClock"|gConfigDxeFormSetGuid|0x0|gRaspberryPiTokenSpaceGuid.PcdCpuDefSpeedMHz
 
   #
   # SD-related.
@@ -455,8 +486,19 @@
   #
   # Display-related.
   #
-  gRaspberryPiTokenSpaceGuid.PcdDisplayEnableScaledVModes|L"DisplayEnableScaledVModes"|gConfigDxeFormSetGuid|0x0|0xff
+  gRaspberryPiTokenSpaceGuid.PcdDisplayEnableScaledVModes|L"DisplayEnableScaledVModes"|gConfigDxeFormSetGuid|0x0|0x3f
   gRaspberryPiTokenSpaceGuid.PcdDisplayEnableSShot|L"DisplayEnableSShot"|gConfigDxeFormSetGuid|0x0|1
+
+  #
+  # Supporting > 3GB of memory.
+  #
+  gRaspberryPiTokenSpaceGuid.PcdRamMoreThan3GB|L"RamMoreThan3GB"|gConfigDxeFormSetGuid|0x0|0
+  gRaspberryPiTokenSpaceGuid.PcdRamLimitTo3GB|L"RamLimitTo3GB"|gConfigDxeFormSetGuid|0x0|1
+
+  #
+  # Device Tree
+  #
+  gRaspberryPiTokenSpaceGuid.PcdOptDeviceTree|L"OptDeviceTree"|gConfigDxeFormSetGuid|0x0|0
 
   #
   # Common UEFI ones.
@@ -550,9 +592,7 @@
 
   ArmPkg/Drivers/ArmGic/ArmGicDxe.inf
   Platform/RaspberryPi/Drivers/RpiFirmwareDxe/RpiFirmwareDxe.inf
-!if $(ACPI_BASIC_MODE_ENABLE) == FALSE
   Platform/RaspberryPi/Drivers/FdtDxe/FdtDxe.inf
-!endif
   Platform/RaspberryPi/Drivers/ConfigDxe/ConfigDxe.inf
   ArmPkg/Drivers/TimerDxe/TimerDxe.inf
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
@@ -570,9 +610,8 @@
   # ACPI Support
   #
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
-  MdeModulePkg/Universal/Acpi/AcpiPlatformDxe/AcpiPlatformDxe.inf
   MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  Platform/RaspberryPi/$(PLATFORM_NAME)/AcpiTables/AcpiTables.inf
+  Platform/RaspberryPi/AcpiTables/AcpiTables.inf
 
   #
   # SMBIOS Support

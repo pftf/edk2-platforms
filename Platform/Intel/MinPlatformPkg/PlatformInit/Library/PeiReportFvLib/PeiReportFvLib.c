@@ -1,7 +1,7 @@
 /** @file
   Source code file for Report Firmware Volume (FV) library
 
-Copyright (c) 2018 - 2019, Intel Corporation. All rights reserved.<BR>
+Copyright (c) 2018 - 2020, Intel Corporation. All rights reserved.<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -20,12 +20,15 @@ ReportPreMemFv (
   VOID
   )
 {
-  if (!PcdGetBool(PcdFspWrapperBootMode)) {
-    DEBUG ((DEBUG_INFO, "Install FlashFvFspM - 0x%x, 0x%x\n", PcdGet32 (PcdFlashFvFspMBase), PcdGet32 (PcdFlashFvFspMSize)));
+  ///
+  /// Note : FSP FVs except FSP-T FV are installed in IntelFsp2WrapperPkg in Dispatch mode.
+  ///
+  if (PcdGetBool(PcdFspWrapperBootMode)) {
+    DEBUG ((DEBUG_INFO, "Install FlashFvFspT - 0x%x, 0x%x\n", PcdGet32 (PcdFlashFvFspTBase), PcdGet32 (PcdFlashFvFspTSize)));
     PeiServicesInstallFvInfo2Ppi (
-      &(((EFI_FIRMWARE_VOLUME_HEADER *) (UINTN) PcdGet32 (PcdFlashFvFspMBase))->FileSystemGuid),
-      (VOID *) (UINTN) PcdGet32 (PcdFlashFvFspMBase),
-      PcdGet32 (PcdFlashFvFspMSize),
+      &(((EFI_FIRMWARE_VOLUME_HEADER *) (UINTN) PcdGet32 (PcdFlashFvFspTBase))->FileSystemGuid),
+      (VOID *) (UINTN) PcdGet32 (PcdFlashFvFspTBase),
+      PcdGet32 (PcdFlashFvFspTSize),
       NULL,
       NULL,
       0
@@ -70,6 +73,10 @@ ReportPostMemFv (
   ASSERT_EFI_ERROR (Status);
 
   ///
+  /// Note : FSP FVs except FSP-T FV are installed in IntelFsp2WrapperPkg in Dispatch mode.
+  ///
+
+  ///
   /// Build HOB for DXE
   ///
   if (BootMode == BOOT_IN_RECOVERY_MODE) {
@@ -86,26 +93,6 @@ ReportPostMemFv (
       NULL,
       0
       );
-    if (!PcdGetBool(PcdFspWrapperBootMode)) {
-      DEBUG ((DEBUG_INFO, "Install FlashFvFspS - 0x%x, 0x%x\n", PcdGet32 (PcdFlashFvFspSBase), PcdGet32 (PcdFlashFvFspSSize)));
-      PeiServicesInstallFvInfo2Ppi (
-        &(((EFI_FIRMWARE_VOLUME_HEADER *) (UINTN) PcdGet32 (PcdFlashFvFspSBase))->FileSystemGuid),
-        (VOID *) (UINTN) PcdGet32 (PcdFlashFvFspSBase),
-        PcdGet32 (PcdFlashFvFspSSize),
-        NULL,
-        NULL,
-        0
-        );
-      DEBUG ((DEBUG_INFO, "Install FlashFvFspU - 0x%x, 0x%x\n", PcdGet32 (PcdFlashFvFspUBase), PcdGet32 (PcdFlashFvFspUSize)));
-      PeiServicesInstallFvInfo2Ppi (
-        &(((EFI_FIRMWARE_VOLUME_HEADER *) (UINTN) PcdGet32 (PcdFlashFvFspUBase))->FileSystemGuid),
-        (VOID *) (UINTN) PcdGet32 (PcdFlashFvFspUBase),
-        PcdGet32 (PcdFlashFvFspUSize),
-        NULL,
-        NULL,
-        0
-        );
-    }
     DEBUG ((DEBUG_INFO, "Install FlashFvUefiBoot - 0x%x, 0x%x\n", PcdGet32 (PcdFlashFvUefiBootBase), PcdGet32 (PcdFlashFvUefiBootSize)));
     PeiServicesInstallFvInfo2Ppi (
       &(((EFI_FIRMWARE_VOLUME_HEADER *) (UINTN) PcdGet32 (PcdFlashFvUefiBootBase))->FileSystemGuid),
