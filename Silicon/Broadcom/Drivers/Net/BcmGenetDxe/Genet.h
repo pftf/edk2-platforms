@@ -286,7 +286,7 @@ GenetSetPromisc (
   IN BOOLEAN              Enable
   );
 
-EFI_STATUS
+VOID
 EFIAPI
 GenetDmaInitRings (
   IN GENET_PRIVATE_DATA * Genet

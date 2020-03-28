@@ -95,6 +95,7 @@ GenetSimpleNetworkInitialize (
 {
   GENET_PRIVATE_DATA *Genet;
   EFI_STATUS Status;
+  UINTN n;
 
   if (This == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -126,9 +127,14 @@ GenetSimpleNetworkInitialize (
     Genet->SnpMode.MediaPresent = TRUE;
   }
 
-  Status = GenetDmaInitRings (Genet);
-  if (EFI_ERROR (Status)) {
-    return Status;
+  GenetDmaInitRings (Genet);
+
+  // Map RX buffers
+  for (n = 0; n < GENET_DMA_DESC_COUNT; n++) {
+      Status = GenetDmaMapRxDescriptor (Genet, n);
+      if (EFI_ERROR (Status)) {
+          return Status;
+      }
   }
 
   GenetEnableTxRx (Genet);
@@ -175,6 +181,7 @@ GenetSimpleNetworkShutdown (
   )
 {
   GENET_PRIVATE_DATA *Genet;
+  UINTN n;
 
   if (This == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -189,6 +196,10 @@ GenetSimpleNetworkShutdown (
   }
 
   GenetDisableTxRx (Genet);
+
+  for (n = 0; n < GENET_DMA_DESC_COUNT; n++) {
+    GenetDmaUnmapRxDescriptor (Genet, n);
+  }
 
   Genet->SnpMode.State = EfiSimpleNetworkStopped;
 

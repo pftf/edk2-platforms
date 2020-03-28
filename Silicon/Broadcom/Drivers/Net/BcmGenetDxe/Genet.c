@@ -317,17 +317,16 @@ GenetSetPromisc (
     GenetMmioWrite (Genet, GENET_UMAC_CMD, Value);
 }
 
-EFI_STATUS
+VOID
 EFIAPI
 GenetDmaInitRings (
     IN GENET_PRIVATE_DATA * Genet
     )
 {
-    EFI_STATUS Status;
     UINT8 Qid = GENET_DMA_DEFAULT_QUEUE;
-    UINTN n;
 
     Genet->TxQueued = 0;
+    Genet->TxNext = 0;
     Genet->TxConsIndex = 0;
     Genet->TxProdIndex = 0;
 
@@ -378,16 +377,6 @@ GenetDmaInitRings (
 
     // Enable RX queue
     GenetMmioWrite (Genet, GENET_RX_DMA_RING_CFG, (1U << Qid));
-
-    // Map RX buffers
-    for (n = 0; n < GENET_DMA_DESC_COUNT; n++) {
-        Status = GenetDmaMapRxDescriptor (Genet, n);
-        if (EFI_ERROR (Status)) {
-            return Status;
-        }
-    }
-
-    return EFI_SUCCESS;
 }
 
 EFI_STATUS
