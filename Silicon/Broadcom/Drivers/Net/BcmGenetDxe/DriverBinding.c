@@ -12,7 +12,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 
-#include "Genet.h"
+#include "GenetUtil.h"
 #include "SimpleNetwork.h"
 
 EFI_STATUS

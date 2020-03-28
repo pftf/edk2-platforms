@@ -4,7 +4,7 @@
   SPDX-License-Identifier: BSD-2-Clause
 **/
 
-#include "Genet.h"
+#include "GenetUtil.h"
 
 #include <Library/ArmLib.h>
 #include <Library/DmaLib.h>

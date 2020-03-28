@@ -4,7 +4,7 @@
   SPDX-License-Identifier: BSD-2-Clause
 **/
 
-#include "Genet.h"
+#include "GenetUtil.h"
 
 EFI_STATUS
 EFIAPI

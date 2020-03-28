@@ -19,7 +19,7 @@
   ComponentName.c
   DriverBinding.c
   GenericPhy.c
-  Genet.c
+  GenetUtil.c
   SimpleNetwork.c
 
 [Packages]

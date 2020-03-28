@@ -4,8 +4,8 @@
   SPDX-License-Identifier: BSD-2-Clause
 **/
 
-#ifndef GENET_H__
-#define GENET_H__
+#ifndef GENET_UTIL_H__
+#define GENET_UTIL_H__
 
 #include <Uefi.h>
 
@@ -342,4 +342,4 @@ GenetRxIntr (
   OUT UINTN *             FrameLength
   );
 
-#endif /* GENET_H__ */
+#endif /* GENET_UTIL_H__ */
