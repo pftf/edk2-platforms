@@ -244,7 +244,31 @@ GenetSimpleNetworkStationAddress (
   IN EFI_MAC_ADDRESS                           *New    OPTIONAL
   )
 {
-  return EFI_UNSUPPORTED;
+  GENET_PRIVATE_DATA *Genet;
+
+  if (This == NULL || This->Mode == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+  if (Reset == TRUE && New == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS(This);
+  if (Genet->SnpMode.State != EfiSimpleNetworkStarted) {
+    return EFI_NOT_STARTED;
+  }
+
+  if (Reset) {
+    // Use permanent address
+    CopyMem (&This->Mode->CurrentAddress, &This->Mode->PermanentAddress, sizeof (This->Mode->CurrentAddress));
+  } else {
+    // Use specified address
+    CopyMem (&This->Mode->CurrentAddress, New, sizeof (This->Mode->CurrentAddress));
+  }
+
+  GenetSetMacAddress (Genet, &Genet->SnpMode.CurrentAddress);
+
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
