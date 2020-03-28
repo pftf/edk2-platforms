@@ -5,7 +5,6 @@
 **/
 
 #include "Genet.h"
-#include "GenetReg.h"
 
 #include <Library/ArmLib.h>
 #include <Library/DmaLib.h>

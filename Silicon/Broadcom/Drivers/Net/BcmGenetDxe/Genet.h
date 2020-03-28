@@ -18,7 +18,6 @@
 #include <Library/NetLib.h>
 #include <Library/UefiLib.h>
 
-#include "GenetReg.h"
 #include "GenericPhy.h"
 
 #define GENET_VERSION             0x0a

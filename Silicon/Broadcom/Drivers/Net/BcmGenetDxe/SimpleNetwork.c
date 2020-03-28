@@ -5,7 +5,6 @@
 **/
 
 #include "Genet.h"
-#include "GenetReg.h"
 #include "SimpleNetwork.h"
 
 #include <Library/DmaLib.h>
