@@ -1,5 +1,6 @@
 ## @file
 #
+# Copyright (c) 2020, Jared McNeill All rights reserved.<BR>
 # Copyright (c) 2020, Jeremy Linton All rights reserved.<BR>
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -11,24 +12,40 @@
   BASE_NAME                      = BcmGenetDxe
   FILE_GUID                      = e2b1eaf3-50b7-4ae1-b79e-ec8020cb57ac
   MODULE_TYPE                    = DXE_DRIVER
-  VERSION_STRING                 = 0.1
+  VERSION_STRING                 = 1.0
   ENTRY_POINT                    = GenetEntryPoint
 
 [Sources]
-  Genet.c
+  ComponentName.c
+  DriverBinding.c
+  GenericPhy.c
+  GenetUtil.c
+  SimpleNetwork.c
 
 [Packages]
   ArmPkg/ArmPkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  NetworkPkg/NetworkPkg.dec
   Silicon/Broadcom/Drivers/Net/BcmNet.dec
 
 [LibraryClasses]
   ArmLib
   BaseLib
+  DebugLib
+  DevicePathLib
+  DmaLib
   IoLib
+  NetLib
   UefiDriverEntryPoint
   UefiLib
+
+[Protocols]
+  gEdkiiNonDiscoverableDeviceProtocolGuid
+  gEfiDevicePathProtocolGuid
+  gEfiDriverBindingProtocolGuid
+  gEfiSimpleNetworkProtocolGuid
 
 [FixedPcd]
   gBcmNetTokenSpaceGuid.PcdBcmGenetRegistersAddress
