@@ -174,7 +174,10 @@ GenetDriverBindingStart (
   Genet->SnpMode.PermanentAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
   Genet->SnpMode.CurrentAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
 
+  CopyMem (&mDevicePath.MacAddrDP.MacAddress, &Genet->SnpMode.CurrentAddress, NET_ETHER_ADDR_LEN);
+
   Status = gBS->InstallMultipleProtocolInterfaces (&ControllerHandle,
+                                                   &gEfiDevicePathProtocolGuid, &mDevicePath,
                                                    &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
                                                    NULL
                                                    );
@@ -220,6 +223,7 @@ GenetDriverBindingStop (
   ASSERT (Genet->ControllerHandle == ControllerHandle);
 
   Status = gBS->UninstallMultipleProtocolInterfaces (ControllerHandle,
+                                                     &gEfiDevicePathProtocolGuid, &mDevicePath,
                                                      &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
                                                      NULL
                                                      );
@@ -260,10 +264,7 @@ GenetEntryPoint (
   DEBUG ((EFI_D_INFO, "GenetEntryPoint: MAC address %02X:%02X:%02X:%02X:%02X:%02X\n",
     Bytes[0], Bytes[1], Bytes[2], Bytes[3], Bytes[4], Bytes[5]));
 
-  mDevicePath.MacAddrDP.MacAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
-
   Status = gBS->InstallMultipleProtocolInterfaces (&mDevice,
-                                                   &gEfiDevicePathProtocolGuid, &mDevicePath,
                                                    &gEfiCallerIdGuid, NULL,
                                                    NULL
                                                    );
@@ -285,7 +286,6 @@ GenetEntryPoint (
 
   if (EFI_ERROR (Status)) {
     gBS->UninstallMultipleProtocolInterfaces (mDevice,
-                                              &gEfiDevicePathProtocolGuid, &mDevicePath,
                                               &gEfiCallerIdGuid, NULL,
                                               NULL);
   }
