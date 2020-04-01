@@ -171,8 +171,8 @@ GenetDriverBindingStart (
   SetMem (&Genet->SnpMode.BroadcastAddress, sizeof (EFI_MAC_ADDRESS), 0xff);
 
   MacAddr = PcdGet64 (PcdBcmGenetMacAddress);
-  Genet->SnpMode.PermanentAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
-  Genet->SnpMode.CurrentAddress = *(EFI_MAC_ADDRESS *)&MacAddr;
+  CopyMem (&Genet->SnpMode.PermanentAddress, &MacAddr, NET_ETHER_ADDR_LEN);
+  CopyMem (&Genet->SnpMode.CurrentAddress, &MacAddr, NET_ETHER_ADDR_LEN);
 
   CopyMem (&mDevicePath.MacAddrDP.MacAddress, &Genet->SnpMode.CurrentAddress, NET_ETHER_ADDR_LEN);
 
