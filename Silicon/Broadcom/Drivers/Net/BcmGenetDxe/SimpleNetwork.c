@@ -18,19 +18,19 @@
 GLOBAL_REMOVE_IF_UNREFERENCED
 EFI_SIMPLE_NETWORK_PROTOCOL gGenetSimpleNetwork = {
   EFI_SIMPLE_NETWORK_PROTOCOL_REVISION,       // Revision
-  GenetSimpleNetworkStart,           // Start
-  GenetSimpleNetworkStop,            // Stop
-  GenetSimpleNetworkInitialize,      // Initialize
-  GenetSimpleNetworkReset,           // Reset
-  GenetSimpleNetworkShutdown,        // Shutdown
-  GenetSimpleNetworkReceiveFilters,  // ReceiveFilters
-  GenetSimpleNetworkStationAddress,  // StationAddress
-  GenetSimpleNetworkStatistics,      // Statistics
-  NULL,                                       // MCastIpToMac
-  GenetSimpleNetworkNvData,          // NvData
-  GenetSimpleNetworkGetStatus,       // GetStatus
-  GenetSimpleNetworkTransmit,        // Transmit
-  GenetSimpleNetworkReceive,         // Receive
+  GenetSimpleNetworkStart,                    // Start
+  GenetSimpleNetworkStop,                     // Stop
+  GenetSimpleNetworkInitialize,               // Initialize
+  GenetSimpleNetworkReset,                    // Reset
+  GenetSimpleNetworkShutdown,                 // Shutdown
+  GenetSimpleNetworkReceiveFilters,           // ReceiveFilters
+  GenetSimpleNetworkStationAddress,           // StationAddress
+  GenetSimpleNetworkStatistics,               // Statistics
+  GenetSimpleNetworkMCastIPtoMAC,             // MCastIpToMac
+  GenetSimpleNetworkNvData,                   // NvData
+  GenetSimpleNetworkGetStatus,                // GetStatus
+  GenetSimpleNetworkTransmit,                 // Transmit
+  GenetSimpleNetworkReceive,                  // Receive
   NULL,                                       // WaitForPacket
   NULL                                        // Mode
 };
@@ -776,3 +776,36 @@ GenetSimpleNetworkReceive (
   EfiReleaseLock (&Genet->Lock);
   return Status;
 }
+
+
+/**
+  This function converts a multicast IP address to a multicast HW MAC address
+  for all packet transactions.
+
+  @param [in] pSimpleNetwork    Protocol instance pointer
+  @param [in] bIPv6             Set to TRUE if the multicast IP address is IPv6 [RFC2460].
+                                Set to FALSE if the multicast IP address is IPv4 [RFC 791].
+  @param [in] pIP               The multicast IP address that is to be converted to a
+                                multicast HW MAC address.
+  @param [in] pMAC              The multicast HW MAC address that is to be generated from IP.
+
+  @retval EFI_SUCCESS           This operation was successful.
+  @retval EFI_NOT_STARTED       The network interface was not started.
+  @retval EFI_INVALID_PARAMETER pSimpleNetwork parameter was NULL or did not point to a valid
+                                EFI_SIMPLE_NETWORK_PROTOCOL structure.
+  @retval EFI_DEVICE_ERROR      The command could not be sent to the network interface.
+  @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
+
+**/
+EFI_STATUS
+EFIAPI
+GenetSimpleNetworkMCastIPtoMAC (
+  IN EFI_SIMPLE_NETWORK_PROTOCOL * pSimpleNetwork,
+  IN BOOLEAN bIPv6,
+  IN EFI_IP_ADDRESS * pIP,
+  OUT EFI_MAC_ADDRESS * pMAC
+  )
+{
+  return EFI_UNSUPPORTED;
+}
+

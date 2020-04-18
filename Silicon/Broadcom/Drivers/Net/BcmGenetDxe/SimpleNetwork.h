@@ -112,4 +112,13 @@ GenetSimpleNetworkReceive (
   OUT    UINT16                               *Protocol    OPTIONAL
   );
 
+EFI_STATUS
+EFIAPI
+GenetSimpleNetworkMCastIPtoMAC (
+  IN EFI_SIMPLE_NETWORK_PROTOCOL * pSimpleNetwork,
+  IN BOOLEAN bIPv6,
+  IN EFI_IP_ADDRESS * pIP,
+  OUT EFI_MAC_ADDRESS * pMAC
+  );
+
 #endif // GENET_SIMPLENETWORK_H__
