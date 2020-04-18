@@ -8,32 +8,9 @@
 **/
 
 #include "GenetUtil.h"
-#include "SimpleNetwork.h"
 
 #include <Library/DmaLib.h>
 
-///
-/// Simple Network Protocol instance
-///
-GLOBAL_REMOVE_IF_UNREFERENCED
-EFI_SIMPLE_NETWORK_PROTOCOL gGenetSimpleNetwork = {
-  EFI_SIMPLE_NETWORK_PROTOCOL_REVISION,       // Revision
-  GenetSimpleNetworkStart,                    // Start
-  GenetSimpleNetworkStop,                     // Stop
-  GenetSimpleNetworkInitialize,               // Initialize
-  GenetSimpleNetworkReset,                    // Reset
-  GenetSimpleNetworkShutdown,                 // Shutdown
-  GenetSimpleNetworkReceiveFilters,           // ReceiveFilters
-  GenetSimpleNetworkStationAddress,           // StationAddress
-  GenetSimpleNetworkStatistics,               // Statistics
-  GenetSimpleNetworkMCastIPtoMAC,             // MCastIpToMac
-  GenetSimpleNetworkNvData,                   // NvData
-  GenetSimpleNetworkGetStatus,                // GetStatus
-  GenetSimpleNetworkTransmit,                 // Transmit
-  GenetSimpleNetworkReceive,                  // Receive
-  NULL,                                       // WaitForPacket
-  NULL                                        // Mode
-};
 
 /**
   Changes the state of a network interface from "stopped" to "started".
@@ -809,3 +786,25 @@ GenetSimpleNetworkMCastIPtoMAC (
   return EFI_UNSUPPORTED;
 }
 
+///
+/// Simple Network Protocol instance
+///
+GLOBAL_REMOVE_IF_UNREFERENCED
+EFI_SIMPLE_NETWORK_PROTOCOL gGenetSimpleNetwork = {
+  EFI_SIMPLE_NETWORK_PROTOCOL_REVISION,       // Revision
+  GenetSimpleNetworkStart,                    // Start
+  GenetSimpleNetworkStop,                     // Stop
+  GenetSimpleNetworkInitialize,               // Initialize
+  GenetSimpleNetworkReset,                    // Reset
+  GenetSimpleNetworkShutdown,                 // Shutdown
+  GenetSimpleNetworkReceiveFilters,           // ReceiveFilters
+  GenetSimpleNetworkStationAddress,           // StationAddress
+  GenetSimpleNetworkStatistics,               // Statistics
+  GenetSimpleNetworkMCastIPtoMAC,             // MCastIpToMac
+  GenetSimpleNetworkNvData,                   // NvData
+  GenetSimpleNetworkGetStatus,                // GetStatus
+  GenetSimpleNetworkTransmit,                 // Transmit
+  GenetSimpleNetworkReceive,                  // Receive
+  NULL,                                       // WaitForPacket
+  NULL                                        // Mode
+};

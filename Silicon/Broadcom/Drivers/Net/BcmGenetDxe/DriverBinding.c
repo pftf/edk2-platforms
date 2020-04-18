@@ -17,7 +17,8 @@
 #include <Net/Genet.h>
 
 #include "GenetUtil.h"
-#include "SimpleNetwork.h"
+
+extern EFI_SIMPLE_NETWORK_PROTOCOL gGenetSimpleNetwork;
 
 EFI_STATUS
 EFIAPI
