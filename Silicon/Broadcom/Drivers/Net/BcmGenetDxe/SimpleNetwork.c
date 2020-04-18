@@ -1,7 +1,10 @@
 /** @file
+  Provides the Simple Network functions.
+
   Copyright (c) 2020 Jared McNeill. All rights reserved.
 
-  SPDX-License-Identifier: BSD-2-Clause
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+
 **/
 
 #include "GenetUtil.h"

@@ -1,7 +1,9 @@
 /** @file
+
   Copyright (c) 2020 Jared McNeill <jmcneill@invisible.ca>
 
-  SPDX-License-Identifier: BSD-2-Clause
+  SPDX-License-Identifier: BSD-2-Clause-Patent
+
 **/
 
 #ifndef GENET_UTIL_H__
