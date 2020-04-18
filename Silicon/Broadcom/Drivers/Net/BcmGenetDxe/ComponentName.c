@@ -8,60 +8,26 @@
 
 #include "GenetUtil.h"
 
-EFI_STATUS
-EFIAPI
-GenetComponentNameGetDriverName (
-  IN  EFI_COMPONENT_NAME2_PROTOCOL  *This,
-  IN  CHAR8                         *Language,
-  OUT CHAR16                        **DriverName
-  );
-
-EFI_STATUS
-EFIAPI
-GenetComponentNameGetControllerName (
-  IN  EFI_COMPONENT_NAME2_PROTOCOL  *This,
-  IN  EFI_HANDLE                    ControllerHandle,
-  IN  EFI_HANDLE                    ChildHandle,  OPTIONAL
-  IN  CHAR8                         *Language,
-  OUT CHAR16                        **ControllerName
-  );
-
-GLOBAL_REMOVE_IF_UNREFERENCED
-EFI_COMPONENT_NAME_PROTOCOL gGenetComponentName = {
-  (EFI_COMPONENT_NAME_GET_DRIVER_NAME) GenetComponentNameGetDriverName,
-  (EFI_COMPONENT_NAME_GET_CONTROLLER_NAME) GenetComponentNameGetControllerName,
-  "eng"
+STATIC EFI_UNICODE_STRING_TABLE mGenetDriverNameTable[] = {
+  {
+    "eng;en",
+    L"Broadcom GENET Ethernet Driver"
+  },
+  {
+     NULL,
+     NULL
+  }
 };
 
-GLOBAL_REMOVE_IF_UNREFERENCED
-EFI_COMPONENT_NAME2_PROTOCOL gGenetComponentName2 = {
-  GenetComponentNameGetDriverName,
-  GenetComponentNameGetControllerName,
-  "en"
-};
-
-STATIC
-EFI_UNICODE_STRING_TABLE mGenetDriverNameTable[] = {
-    {
-        "eng;en",
-        L"Broadcom GENET Ethernet Driver"
-    },
-    {
-        NULL,
-        NULL
-    }
-};
-
-STATIC
-EFI_UNICODE_STRING_TABLE mGenetDeviceNameTable[] = {
-    {
-        "eng;en",
-        L"Broadcom GENET Ethernet"
-    },
-    {
-        NULL,
-        NULL
-    }
+STATIC EFI_UNICODE_STRING_TABLE mGenetDeviceNameTable[] = {
+  {
+    "eng;en",
+    L"Broadcom GENET Ethernet"
+  },
+  {
+    NULL,
+    NULL
+  }
 };
 
 /**
@@ -103,6 +69,7 @@ EFI_UNICODE_STRING_TABLE mGenetDeviceNameTable[] = {
                                 the language specified by Language.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetComponentNameGetDriverName (
@@ -111,13 +78,12 @@ GenetComponentNameGetDriverName (
   OUT CHAR16                        **DriverName
   )
 {
-    return LookupUnicodeString2 (
-        Language,
-        This->SupportedLanguages,
-        mGenetDriverNameTable,
-        DriverName,
-        (BOOLEAN)(This == &gGenetComponentName2)
-        );
+  return LookupUnicodeString2 (Language,
+                               This->SupportedLanguages,
+                               mGenetDriverNameTable,
+                               DriverName,
+                               (BOOLEAN)(This == &gGenetComponentName2)
+                               );
 }
 
 /**
@@ -188,25 +154,45 @@ GenetComponentNameGetDriverName (
                                 the language specified by Language.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetComponentNameGetControllerName (
-  IN  EFI_COMPONENT_NAME2_PROTOCOL  *This,
-  IN  EFI_HANDLE                    ControllerHandle,
-  IN  EFI_HANDLE                    ChildHandle,  OPTIONAL
-  IN  CHAR8                         *Language,
-  OUT CHAR16                        **ControllerName
+  IN  EFI_COMPONENT_NAME2_PROTOCOL                    *This,
+  IN  EFI_HANDLE                                      ControllerHandle,
+  IN  EFI_HANDLE                                      ChildHandle        OPTIONAL,
+  IN  CHAR8                                           *Language,
+  OUT CHAR16                                          **ControllerName
   )
 {
-    if (ChildHandle != NULL) {
-        return EFI_UNSUPPORTED;
-    }
+  if (ChildHandle != NULL) {
+    return EFI_UNSUPPORTED;
+  }
 
-    return LookupUnicodeString2 (
-        Language,
-        This->SupportedLanguages,
-        mGenetDeviceNameTable,
-        ControllerName,
-        (BOOLEAN)(This == &gGenetComponentName2)
-        );
+  return LookupUnicodeString2 (Language,
+                               This->SupportedLanguages,
+                               mGenetDeviceNameTable,
+                               ControllerName,
+                               (BOOLEAN)(This == &gGenetComponentName2)
+                               );
 }
+
+//
+// EFI Component Name Protocol
+//
+GLOBAL_REMOVE_IF_UNREFERENCED
+EFI_COMPONENT_NAME_PROTOCOL gGenetComponentName = {
+  (EFI_COMPONENT_NAME_GET_DRIVER_NAME) GenetComponentNameGetDriverName,
+  (EFI_COMPONENT_NAME_GET_CONTROLLER_NAME) GenetComponentNameGetControllerName,
+  "eng"
+};
+
+//
+// EFI Component Name 2 Protocol
+//
+GLOBAL_REMOVE_IF_UNREFERENCED
+EFI_COMPONENT_NAME2_PROTOCOL gGenetComponentName2 = {
+  GenetComponentNameGetDriverName,
+  GenetComponentNameGetControllerName,
+  "en"
+};
