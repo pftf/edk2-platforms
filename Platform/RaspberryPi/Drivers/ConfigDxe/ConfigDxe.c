@@ -8,19 +8,19 @@
  **/
 
 #include <Uefi.h>
-#include <Library/AcpiLib.h>
-#include <Library/HiiLib.h>
-#include <Library/DebugLib.h>
-#include <Library/DxeServicesTableLib.h>
-#include <Library/IoLib.h>
-#include <Library/UefiBootServicesTableLib.h>
-#include <Library/UefiRuntimeServicesTableLib.h>
-#include <Library/DevicePathLib.h>
-#include <IndustryStandard/RpiMbox.h>
 #include <IndustryStandard/Bcm2711.h>
 #include <IndustryStandard/Bcm2836.h>
 #include <IndustryStandard/Bcm2836Gpio.h>
+#include <IndustryStandard/RpiMbox.h>
+#include <Library/AcpiLib.h>
+#include <Library/DebugLib.h>
+#include <Library/DevicePathLib.h>
+#include <Library/DxeServicesTableLib.h>
 #include <Library/GpioLib.h>
+#include <Library/HiiLib.h>
+#include <Library/IoLib.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 #include <Protocol/RpiFirmware.h>
 #include "ConfigDxeFormSetGuid.h"
 
