@@ -1,7 +1,9 @@
 ## @file
+# Component description file for Broadcom GENET driver.
 #
 # Copyright (c) 2020, Jared McNeill All rights reserved.<BR>
 # Copyright (c) 2020, Jeremy Linton All rights reserved.<BR>
+# Copyright (c) 2020, ARM Limited. All rights reserved.<BR>
 #
 # SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -11,7 +13,7 @@
   INF_VERSION                    = 0x0001001A
   BASE_NAME                      = BcmGenetDxe
   FILE_GUID                      = e2b1eaf3-50b7-4ae1-b79e-ec8020cb57ac
-  MODULE_TYPE                    = DXE_DRIVER
+  MODULE_TYPE                    = UEFI_DRIVER
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = GenetEntryPoint
 
@@ -33,19 +35,23 @@
 [LibraryClasses]
   ArmLib
   BaseLib
+  BaseMemoryLib
   DebugLib
   DevicePathLib
   DmaLib
   IoLib
+  MemoryAllocationLib
   NetLib
   UefiDriverEntryPoint
   UefiLib
 
+[Guids]
+  gBcmNetNonDiscoverableDeviceGuid
+
 [Protocols]
-  gEdkiiNonDiscoverableDeviceProtocolGuid
-  gEfiDevicePathProtocolGuid
-  gEfiDriverBindingProtocolGuid
-  gEfiSimpleNetworkProtocolGuid
+  gEdkiiNonDiscoverableDeviceProtocolGuid     ## TO_START
+  gEfiDevicePathProtocolGuid                  ## BY_START
+  gEfiSimpleNetworkProtocolGuid               ## BY_START
 
 [FixedPcd]
   gBcmNetTokenSpaceGuid.PcdBcmGenetRegistersAddress
@@ -53,5 +59,3 @@
 [Pcd]
   gBcmNetTokenSpaceGuid.PcdBcmGenetMacAddress
 
-[Depex]
-  TRUE

@@ -158,11 +158,6 @@
 #define GENET_TX_SCB_BURST_SIZE                 (GENET_TX_BASE + 0x1040 + 0x0c)
 
 typedef struct {
-  MAC_ADDR_DEVICE_PATH            MacAddrDP;
-  EFI_DEVICE_PATH_PROTOCOL        End;
-} GENET_DEVICE_PATH;
-
-typedef struct {
   EFI_PHYSICAL_ADDRESS            Pa;
   VOID *                          Mapping;
 } GENET_MAP_INFO;
