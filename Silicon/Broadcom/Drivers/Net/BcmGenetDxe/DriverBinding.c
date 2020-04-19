@@ -303,7 +303,7 @@ GenetDriverBindingStop (
 
 
 /**
-  The entry point of Netsec UEFI Driver.
+  The entry point of GENET UEFI Driver.
 
   @param  ImageHandle                The image handle of the UEFI Driver.
   @param  SystemTable                A pointer to the EFI System Table.
