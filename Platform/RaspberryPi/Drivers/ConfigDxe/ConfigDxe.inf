@@ -1,6 +1,8 @@
 #/** @file
 #
-#  Copyright (c) 2019, ARM Limited. All rights reserved.
+#  Component description file for the RasbperryPi DXE platform config driver.
+#
+#  Copyright (c) 2019 - 2020, ARM Limited. All rights reserved.
 #  Copyright (c) 2018, Andrei Warkentin <andrey.warkentin@gmail.com>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -21,7 +23,6 @@
 #
 #  VALID_ARCHITECTURES           = AARCH64
 #
-
 [Sources]
   ConfigDxe.c
   ConfigDxeFormSetGuid.h
@@ -34,9 +35,11 @@
   EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  NetworkPkg/NetworkPkg.dec
   Platform/RaspberryPi/RaspberryPi.dec
   Silicon/Broadcom/Bcm27xx/Bcm27xx.dec
   Silicon/Broadcom/Bcm283x/Bcm283x.dec
+  Silicon/Broadcom/Drivers/Net/BcmNet.dec
 
 [LibraryClasses]
   AcpiLib
@@ -45,17 +48,21 @@
   DxeServicesTableLib
   GpioLib
   HiiLib
+  NetLib
   PcdLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
   UefiRuntimeServicesTableLib
 
 [Guids]
+  gBcmNetNonDiscoverableDeviceGuid
   gConfigDxeFormSetGuid
+  gEfiEndOfDxeEventGroupGuid
 
 [Protocols]
-  gRaspberryPiFirmwareProtocolGuid      ## CONSUMES
-  gRaspberryPiConfigAppliedProtocolGuid ## PRODUCES
+  gEdkiiNonDiscoverableDeviceProtocolGuid         ## PRODUCES
+  gRaspberryPiFirmwareProtocolGuid                ## CONSUMES
+  gRaspberryPiConfigAppliedProtocolGuid           ## PRODUCES
 
 [FixedPcd]
   gRaspberryPiTokenSpaceGuid.PcdCpuLowSpeedMHz
@@ -65,6 +72,7 @@
 [Pcd]
   gBcm27xxTokenSpaceGuid.PcdBcm27xxRegistersAddress
   gBcm283xTokenSpaceGuid.PcdBcm283xRegistersAddress
+  gBcmNetTokenSpaceGuid.PcdBcmGenetMacAddress
   gRaspberryPiTokenSpaceGuid.PcdCpuClock
   gRaspberryPiTokenSpaceGuid.PcdCustomCpuClock
   gRaspberryPiTokenSpaceGuid.PcdSdIsArasan
