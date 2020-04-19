@@ -24,6 +24,7 @@
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkStart (
@@ -59,6 +60,7 @@ GenetSimpleNetworkStart (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkStop (
@@ -115,6 +117,7 @@ GenetSimpleNetworkStop (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkInitialize (
@@ -190,6 +193,7 @@ GenetSimpleNetworkInitialize (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkReset (
@@ -233,6 +237,7 @@ GenetSimpleNetworkReset (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkShutdown (
@@ -289,6 +294,7 @@ GenetSimpleNetworkShutdown (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkReceiveFilters (
@@ -334,6 +340,7 @@ GenetSimpleNetworkReceiveFilters (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkStationAddress (
@@ -390,6 +397,7 @@ GenetSimpleNetworkStationAddress (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkStatistics (
@@ -422,6 +430,7 @@ GenetSimpleNetworkStatistics (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkNvData (
@@ -460,6 +469,7 @@ GenetSimpleNetworkNvData (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkGetStatus (
@@ -527,6 +537,7 @@ GenetSimpleNetworkGetStatus (
   @retval EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkTransmit (
@@ -656,6 +667,7 @@ GenetSimpleNetworkTransmit (
   @retval  EFI_UNSUPPORTED       This function is not supported by the network interface.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkReceive (
@@ -774,6 +786,7 @@ GenetSimpleNetworkReceive (
   @retval EFI_UNSUPPORTED       The increased buffer size feature is not supported.
 
 **/
+STATIC
 EFI_STATUS
 EFIAPI
 GenetSimpleNetworkMCastIPtoMAC (
