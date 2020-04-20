@@ -264,6 +264,7 @@ GenetDriverBindingStop (
                                 &gEfiSimpleNetworkProtocolGuid,
                                 (VOID **)&SnpProtocol
                                 );
+  ASSERT_EFI_ERROR (Status);								
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -282,10 +283,14 @@ GenetDriverBindingStop (
 
   GenetDmaFree (Genet);
 
-  gBS->CloseProtocol (ControllerHandle,
-                      &gEfiCallerIdGuid,
-                      This->DriverBindingHandle,
-                      ControllerHandle);
+  Status = gBS->CloseProtocol (ControllerHandle,
+                               &gEdkiiNonDiscoverableDeviceProtocolGuid,
+                               This->DriverBindingHandle,
+                               ControllerHandle);
+  ASSERT_EFI_ERROR (Status);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
 
   FreePool (Genet);
 
