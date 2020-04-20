@@ -113,8 +113,6 @@ GenetDriverBindingSupported (
                       This->DriverBindingHandle,
                       ControllerHandle);
 
-  DEBUG ((DEBUG_INFO, "GenetDriverBindingSupported : Exit\n"));
-
   return Status;
 }
 
@@ -148,8 +146,6 @@ GenetDriverBindingStart (
   GENET_PRIVATE_DATA      *Genet;
   EFI_STATUS              Status;
   UINT64                  MacAddr;
-
-  DEBUG ((DEBUG_INFO, "GenetDriverBindingStart: Entered\n"));
 
   // Allocate Resources
   Genet = AllocateZeroPool (sizeof (GENET_PRIVATE_DATA));
