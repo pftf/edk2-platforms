@@ -85,6 +85,16 @@ ASM_FUNC (ArmPlatformPeiBootAction)
     adr     x2, mBoardRevision
     str     w0, [x2]
 
+    run     .Lclkinfo_buffer
+
+    ldr     w0, .Lfrequency
+    adr     x2, gSerialLibCoreClockFreq
+    str     w0, [x2]
+    adr     x2, gSerialLibCoreSkipHob
+    //
+    // Any non-zero value will do.
+    //
+    str     w0, [x2]
     ret
 
     .align  4
@@ -126,6 +136,19 @@ ASM_FUNC (ArmPlatformPeiBootAction)
     .long   0                           // revision
     .long   0                           // end tag
     .set    .Lrevinfo_size, . - .Lrevinfo_buffer
+
+     .align 4
+.Lclkinfo_buffer:
+    .long   .Lclkinfo_size
+    .long   0x0
+    .long   RPI_MBOX_GET_CLOCK_RATE
+    .long   8                           // buf size
+    .long   4                           // input len
+    .long   4                           // clock id: 0x04 = Core/VPU
+.Lfrequency:
+    .long   0                           // frequency
+    .long   0                           // end tag
+    .set    .Lclkinfo_size, . - .Lclkinfo_buffer
 
 //UINTN
 //ArmPlatformGetPrimaryCoreMpId (

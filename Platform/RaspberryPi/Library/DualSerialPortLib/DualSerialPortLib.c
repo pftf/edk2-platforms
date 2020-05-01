@@ -1,6 +1,7 @@
 /** @file
   16550 and PL011 Serial Port library functions for Raspberry Pi
 
+  Copyright (c) 2020, Andrei Warkentin <andrey.warkentin@gmail.com>
   Copyright (c) 2020, Pete Batard <pete@akeo.ie>
   Copyright (c) 2018, AMD Incorporated. All rights reserved.<BR>
   Copyright (c) 2014, Hewlett-Packard Development Company, L.P.<BR>
@@ -12,7 +13,8 @@
 
 **/
 
-#include <Base.h>
+#include <Uefi.h>
+#include <Guid/DualSerialPortLibHobGuid.h>
 #include <IndustryStandard/Bcm2836.h>
 #include <IndustryStandard/Bcm2836Gpio.h>
 #include <Library/BaseLib.h>
@@ -21,9 +23,21 @@
 #include <Library/PL011UartClockLib.h>
 #include <Library/PL011UartLib.h>
 #include <Library/SerialPortLib.h>
+//
+// The order of the following includes should not be altered
+//
+#include <Library/PrePiHobListPointerLib.h>
+#include <Pi/PiMultiPhase.h>
+#include <Library/HobLib.h>
 
-BOOLEAN UsePl011Uart          = FALSE;
-BOOLEAN UsePl011UartSet       = FALSE;
+STATIC BOOLEAN UsePl011Uart    = FALSE;
+STATIC BOOLEAN UsePl011UartSet = FALSE;
+UINT32 gSerialLibCoreClockFreq  = 0;
+//
+// Set by ArmPlatformPeiBootAction to skip PrePeiGetHobList,
+// as it won't be initialized and could return garbage.
+//
+UINT32 gSerialLibCoreSkipHob    = 0;
 
 #define PL011_UART_REGISTER_BASE      BCM2836_PL011_UART_BASE_ADDRESS
 #define MINI_UART_REGISTER_BASE       (BCM2836_MINI_UART_BASE_ADDRESS + 0x40)
@@ -152,26 +166,86 @@ SerialPortGetDivisor (
   UINT32  SerialBaudRate
 )
 {
-  UINT64              BaseClockRate;
-  UINT32              Divisor;
+  UINT64                    BaseSerialClockFreq;
+  UINT32                    Divisor;
+
+#if (RPI_MODEL == 3)
+  VOID                      *HobList;
+  EFI_HOB_GUID_TYPE         *GuidHob;
+  DUAL_SERIAL_PORT_LIB_VARS *Vars;
 
   //
-  // On the Raspberry Pi, the clock to use for the 16650-compatible UART
-  // is the base clock divided by the 12.12 fixed point VPU clock divisor.
+  // For the Pi 3, the base serial clock is the VPU core clock.
   //
-  BaseClockRate = (UINT64)PcdGet32 (PcdSerialClockRate) * 4;
-  Divisor = MmioRead32(BCM2836_CM_BASE + BCM2836_CM_VPU_CLOCK_DIVISOR) & 0xFFFFFF;
-  if (Divisor != 0)
-    BaseClockRate = (BaseClockRate << 12) / Divisor;
-
+  // Unfortunately, it's painful to get - it's only available via
+  // the mailbox interface. Additionally, SerialLib is a very
+  // limited environment, even when linked in a DXE-mode component, because
+  // as part of a DebugLib implementation it ends being the base prerequisite
+  // of /everything/. That means a "normal" mailbox implementation like
+  // the one im RpiFirmwareDxe (with dependencies on DmaLib) is out
+  // of the question. Using a basic implementation such as the one
+  // in PlatformLib doesn't work either because operate in both
+  // environments with MMU on (DXE phase) and MMU off (SEC/PrePi).
   //
-  // Now calculate divisor for baud generator
-  //    Ref_Clk_Rate / Baud_Rate / 16
+  // Ideally, we read the value via mbox exactly once (PlatformLib),
+  // then somehow stash it. A GUID Hob sounds pretty nice, but
+  // we can't use the DXE HobLib to *locate* the Hob list itself
+  // (remember, SerialPortLib initializes before any of HobLib's
+  // dependencies, like UeflLib).
   //
-  Divisor = (UINT32)BaseClockRate / (SerialBaudRate * 16);
-  if (((UINT32)BaseClockRate % (SerialBaudRate * 16)) >= SerialBaudRate * 8) {
-    Divisor++;
+  // FORTUNATELY, there is a way out - we can use PrePeiGetHobList
+  // to cut through to the HOB list pointer stashed by PrePi without.
+  // Once we have the Hob list pointer, we can use the DXE HobLib routines
+  // safely (so long as they are the ones taking a HobList pointer
+  // as a parameter).
+  //
+  // gSerialLibCoreClockFreq is always externally set when we run
+  // as part of PrePi. So - if gSerialLibCoreClockFreq is not set,
+  // then we must be in the DXE phase and can fetch the Hob list
+  // via our little hack.
+  //
+  if (gSerialLibCoreClockFreq == 0 && !gSerialLibCoreSkipHob) {
+    HobList = PrePeiGetHobList ();
+    if (HobList != NULL) {
+      GuidHob = (EFI_HOB_GUID_TYPE *) GetNextGuidHob (&gDualSerialPortLibHobGuid,
+                                        HobList);
+      if (GuidHob != NULL) {
+        Vars = (DUAL_SERIAL_PORT_LIB_VARS *) GET_GUID_HOB_DATA (GuidHob);
+        gSerialLibCoreClockFreq = Vars->CoreClockFreq;
+        gSerialLibCoreSkipHob = 1;
+      }
+    }
   }
+
+  //
+  // Fall back to PCD if we have a nonsensical value.
+  //
+  if (gSerialLibCoreClockFreq < 10000000) {
+    gSerialLibCoreClockFreq = PcdGet32 (PcdSerialClockRate);
+  }
+  BaseSerialClockFreq = (UINT64) gSerialLibCoreClockFreq;
+#else
+  //
+  // For the Pi 4, the base serial clock is not derived from the VPU
+  // core clock, but from a fixed clock (currently 1 GHz) to which a
+  // variable 12.12 fixed point clock divisor is applied.
+  //
+  BaseSerialClockFreq = (UINT64) PcdGet32 (PcdSerialClockRate);
+  Divisor = MmioRead32 (BCM2836_CM_BASE + BCM2836_CM_VPU_CLOCK_DIVISOR) & 0xFFFFFF;
+  if (Divisor != 0) {
+    BaseSerialClockFreq = (BaseSerialClockFreq << 12) / Divisor;
+  }
+#endif
+
+  //
+  // As per the BCM2xxx datasheets:
+  // baudrate = system_clock_freq / (8 * (divisor + 1)).
+  //
+  Divisor = (UINT32)BaseSerialClockFreq / (SerialBaudRate * 8);
+  if (Divisor != 0) {
+    Divisor--;
+  }
+
   return Divisor;
 }
 

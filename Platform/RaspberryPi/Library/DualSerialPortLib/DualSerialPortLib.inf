@@ -22,16 +22,22 @@
   EmbeddedPkg/EmbeddedPkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  Platform/RaspberryPi/RaspberryPi.dec
   Silicon/Broadcom/Bcm283x/Bcm283x.dec
 
 [LibraryClasses]
   IoLib
+  HobLib
   PcdLib
   PL011UartClockLib
   PL011UartLib
+  PrePiHobListPointerLib
 
 [Sources]
   DualSerialPortLib.c
+
+[Guids]
+  gDualSerialPortLibHobGuid
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterAccessWidth     ## SOMETIMES_CONSUMES
