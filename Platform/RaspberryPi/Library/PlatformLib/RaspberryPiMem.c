@@ -22,7 +22,12 @@ extern UINT64 mSystemMemoryEnd;
 UINT64 mVideoCoreBase;
 UINT64 mVideoCoreSize;
 UINT32 mBoardRevision;
-
+//
+// gSerialLibCoreClockFreq, which resides in DualSerialLib is set
+// to the VPU Core Clock frequency by ArmPlatformPeiBootAction ().
+// We use it to report the core frequency during early boot.
+//
+extern UINT32 gSerialLibCoreClockFreq;
 
 // The total number of descriptors, including the final "end-of-table" descriptor.
 #define MAX_VIRTUAL_MEMORY_MAP_DESCRIPTORS 11
@@ -66,6 +71,7 @@ ArmPlatformGetVirtualMemoryMap (
   DEBUG ((DEBUG_INFO, "Board Rev: 0x%lX\n", mBoardRevision));
   DEBUG ((DEBUG_INFO, "Base RAM : 0x%ll08X (Size 0x%ll08X)\n", mSystemMemoryBase, mSystemMemoryEnd + 1));
   DEBUG ((DEBUG_INFO, "VideoCore: 0x%ll08X (Size 0x%ll08X)\n", mVideoCoreBase, mVideoCoreSize));
+  DEBUG ((DEBUG_INFO, "Core Freq: %d MHz\n", gSerialLibCoreClockFreq / 1000000));
 
   ASSERT (mSystemMemoryBase == 0);
   ASSERT (VirtualMemoryMap != NULL);
