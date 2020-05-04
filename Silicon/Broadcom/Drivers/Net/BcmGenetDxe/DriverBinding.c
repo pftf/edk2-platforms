@@ -172,7 +172,7 @@ GenetDriverBindingStart (
   }
 
   Genet->Signature = GENET_DRIVER_SIGNATURE;
-  Genet->RegBase = GENET_BASE_ADDRESS;
+  Genet->RegBase = Genet->Dev->Resources[0].AddrRangeMin ;
   Genet->Phy.PrivateData = Genet;
   Genet->Phy.Read = GenetPhyRead;
   Genet->Phy.Write = GenetPhyWrite;
