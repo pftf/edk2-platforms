@@ -24,4 +24,4 @@
   MinPlatformPkg/MinPlatformPkg.dec
 
 [Sources]
-  PeiReportFvLib.c
+  ReportCpuHobLib.c

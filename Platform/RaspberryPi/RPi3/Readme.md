@@ -1,18 +1,32 @@
-Raspberry Pi Platform
-=====================
+Raspberry Pi 3 Platform
+=======================
 
 # Summary
 
-This is a port of 64-bit Tiano Core UEFI firmware for the Raspberry Pi 3/3B+ platforms,
-based on [Ard Bisheuvel's 64-bit](http://www.workofard.com/2017/02/uefi-on-the-pi/)
+This is a port of 64-bit Tiano Core UEFI firmware for the Raspberry Pi 3B (and related)
+platforms, based on [Ard Biesheuvel's 64-bit](http://www.workofard.com/2017/02/uefi-on-the-pi/)
 and [Microsoft's 32-bit](https://github.com/ms-iot/RPi-UEFI/tree/ms-iot/Pi3BoardPkg)
 implementations, as maintained by [Andrei Warkentin](https://github.com/andreiw/RaspberryPiPkg).
 
-This is meant as a generally useful 64-bit ATF + UEFI implementation for the Raspberry
-Pi 3/3B+ which should be good enough for most kind of UEFI development, as well as for
-running consummer Operating Systems in such as Linux or Windows.
+This is meant as a generally useful 64-bit ATF + UEFI implementation for Raspberry Pi
+variants based on the BCM2837 SoC, which should be good enough for most kind of UEFI development,
+as well as for running consummer Operating Systems in such as Linux, Windows or the BSDs.
 
 Raspberry Pi is a trademark of the [Raspberry Pi Foundation](http://www.raspberrypi.org).
+
+# Hardware Supported
+
+The RPi3 target supports Pi revisions based on the BCM2837 SoC:
+- Raspberry Pi 2B v1.2 (older versions are *not* compatible)
+- Raspberry Pi 3A+
+- Raspberry Pi 3B
+- Raspberry Pi 3B+
+- Raspberry Pi CM3
+
+Note: a CM3L, lacking eMMC and thus similar to the 3B, will probably work as well, but just
+has not been tested.
+
+Please see the RPi4 target for BCM2711-based variants, such as the Raspberry Pi 4B.
 
 # Status
 
@@ -42,23 +56,30 @@ Build instructions from the top level edk2-platforms Readme.md apply.
 1. Format a uSD card as FAT32
 2. Copy the generated `RPI_EFI.fd` firmware onto the partition
 3. Download and copy the following files from https://github.com/raspberrypi/firmware/tree/master/boot
+  - `bcm2710-rpi-3-b.dtb` (for Pi 3B)
+  - `bcm2710-rpi-3-b-plus.dtb` (for Pi 3B+)
+  - `bcm2710-rpi-2-b.dtb` (for Pi 2B v1.2)
+  - `bcm2710-rpi-cm3.dtb` (for Pi CM3)
   - `bootcode.bin`
   - `fixup.dat`
   - `start.elf`
+  - `overlays/miniuart-bt.dtbo` or `overlays/disable-bt.dtbo` (Optional)
 4. Create a `config.txt` with the following content:
   ```
   arm_control=0x200
   enable_uart=1
   armstub=RPI_EFI.fd
-  disable_commandline_tags=1
+  disable_commandline_tags=2
+  device_tree_address=0x1f0000
+  device_tree_end=0x200000
   ```
-  Additionally, if you want to use PL011 instead of the miniUART, you can add the lines:
+  If you want to use PL011 instead of the miniUART on your Pi 3B/3B+, you can add the lines:
   ```
-  device_tree_address=0x20000
-  device_tree_end=0x30000
-  device_tree=bcm2710-rpi-3-b[-plus].dtb
   dtoverlay=miniuart-bt
   ```
+  Note: doing so requires `miniuart-bt.dbto` to have been copied into an `overlays/`
+  directory on the uSD card. Alternatively, you may use `disable-bt` instead of
+ `miniuart-bt` if you don't require Bluetooth.
 5. Insert the uSD card and power up the Pi.
 
 Note that if you have a model 3+ or a model 3 where you enabled USB boot through OTP
@@ -67,39 +88,44 @@ you may also be able to boot from a FAT32 USB driver rather than uSD.
 
 # Notes
 
-## ARM Trusted Firmware (ATF)
+## ARM Trusted Firmware (TF-A)
 
-The ATF binaries being used were compiled from the latest ATF source.
-No aleration to the official source have been applied.
+The TF-A binary files were compiled from the latest TF-A release.
+No aleration to the official source has been applied.
 
-For more details on the ATF compilation, see the [Readme](./TrustedFirmware/Readme.md)
-in the `TrustedFirmware/` directory.
+For more details on the TF-A compilation, see the relevant
+[Readme](https://github.com/tianocore/edk2-non-osi/blob/master/Platform/RaspberryPi/RPi3/TrustedFirmware/Readme.md)
+in the `TrustedFirmware/` directory from `edk2-non-osi`.
 
 ## Custom Device Tree
 
-The default Device Tree included in the firmware is the one for a Raspberry Pi 3 Model B (not B+).
-If you want to use a different Device Tree, to boot a Pi 3 Model B+ for instance (for which a
-DTB is also provided under `DeviceTree/`), you should copy the relevant `.dtb` into the root of
+By default, UEFI will use the device tree loaded by the VideoCore firmware. This
+depends on the model/variant, and relies on the presence on specific files on your boot media.
+E.g.:
+ - `bcm2710-rpi-3-b.dtb` (for Pi 3B)
+ - `bcm2710-rpi-3-b-plus.dtb` (for Pi 3B+)
+ - `bcm2710-rpi-2-b.dtb` (for Pi 2B v1.2)
+ - `bcm2710-rpi-cm3.dtb` (for Pi CM3)
+
+You can override the DTB and provide a custom one. Copy the relevant `.dtb` into the root of
 the SD or USB, and then edit your `config.txt` so that it looks like:
 
 ```
 (...)
 disable_commandline_tags=2
-device_tree_address=0x10000
-device_tree_end=0x20000
-device_tree=bcm2710-rpi-3-b-plus.dtb
+device_tree_address=0x1f0000
+device_tree_end=0x200000
+device_tree=your_fdt_file.dtb
 ```
 
-Note: the address range **must** be `[0x10000:0x20000]`.
-`dtoverlay` and `dtparam` parameters are also supported **when** providing a Device Tree`.
+Note: the address range **must** be `[0x1f0000:0x200000]`. `dtoverlay` and `dtparam` parameters are also supported.
 
 ## Custom `bootargs`
 
 This firmware will honor the command line passed by the GPU via `cmdline.txt`.
 
 Note, that the ultimate contents of `/chosen/bootargs` are a combination of several pieces:
-- Original `/chosen/bootargs` if using the internal DTB. Seems to be completely discarded by GPU when booting with a custom device tree.
-- GPU-passed hardware configuration. This one is always present.
+- GPU-passed hardware configuration.
 - Additional boot options passed via `cmdline.txt`.
 
 # Limitations
@@ -137,27 +163,28 @@ This should allow you to set whatever date/time you want using the Shell date an
 time commands. While in UEFI or HLOS, the time will tick forward.
 `RtcEpochSeconds` is not updated on reboots.
 
-## uSD
+## uSD (and eMMC for CM3)
 
-UEFI supports both the Arasan SDHCI and the Broadcom SDHost controllers to access the uSD slot.
-You can use either. The other controller gets routed to the SDIO card. The choice made will
+UEFI supports both the Arasan SDHCI and the Broadcom SDHost controllers to access the flash
+media (eMMC on CM3, and uSD slot on everything else). You can use either. The other controller
+gets routed to the SDIO WiFi card (N/A to models without WiFi). The choice made will
 impact ACPI OSes booted (e.g. Windows 10). Arasan, being an SDIO controller, is usually used
-with the WiFi adapter where available. SDHost cannot be used with SDIO. In UEFI setup screen:
+with the WiFi adapter (where available). SDHost cannot be used with SDIO. In UEFI setup screen:
 - go to `Device Manager`
 - go to `Raspberry Pi Configuration`
-- go to `Chipset`
-- configure `Boot uSD Routing`
+- go to `SD/MMC Configuration`
+- configure `uSD/eMMC Routing`
 
 Known issues:
 - Arasan HS/4bit support is missing.
-- No 8 bit mode support for (e)MMC (irrelevant for the Pi 3).
+- No 8 bit mode support for (e)MMC (slow UEFI file I/O on CM3).
 - Hacky (e)MMC support (no HS).
 - No card removal/replacement detection, tons of timeouts and slow down during boot without an uSD card present.
 
 ## USB
 
 - USB1 BBB mass storage devices untested (USB2 and USB3 devices are fine).
-- USB1 CBI mass storage devices don't work (e.g. HP FD-05PUB floppy).
+- Some USB1 CBI (e.g. UFI floppy) mass storage devices may not work.
 
 ## ACPI
 
@@ -171,4 +198,6 @@ install a kernel that relies on Device Tree rather than ACPI.
 ## Missing Functionality
 
 - Network booting via onboard NIC.
-- Ability to switch UART use to PL011.
+- SPCR hardcodes UART type to miniUART, and thus will not expose correct
+  (PL011) UART on CM3 and Pi2B or if DT overlays to switch UART are used
+  on Pi 3B/3B+/3A+.

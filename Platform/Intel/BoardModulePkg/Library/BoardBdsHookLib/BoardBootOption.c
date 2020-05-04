@@ -1,14 +1,12 @@
 /** @file
   Driver for Platform Boot Options support.
 
-Copyright (c) 2017, Intel Corporation. All rights reserved.<BR>
+Copyright (c) 2019, Intel Corporation. All rights reserved.<BR>
 SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "BdsPlatform.h"
-
-#include <Library/PcdLib.h>
+#include "BoardBdsHook.h"
 
 BOOLEAN    mContinueBoot  = FALSE;
 BOOLEAN    mBootMenuBoot  = FALSE;
@@ -18,25 +16,16 @@ EFI_EVENT  HotKeyEvent    = NULL;
 
 UINTN      mBootMenuOptionNumber;
 
+
+/**
+  This function will create a SHELL BootOption to boot.
+
+  @return Shell Device path for booting.
+**/
 EFI_DEVICE_PATH_PROTOCOL *
 BdsCreateShellDevicePath (
   VOID
   )
-/*++
-
-Routine Description:
-
-  This function will create a SHELL BootOption to boot.
-
-Arguments:
-
-  None.
-
-Returns:
-
-  Shell Device path for booting.
-
---*/
 {
   UINTN                             FvHandleCount;
   EFI_HANDLE                        *FvHandleBuffer;
@@ -240,6 +229,19 @@ PlatformFindLoadOption (
   return -1;
 }
 
+
+/**
+  Registers a boot option
+
+  @param FileGuid               Boot file GUID
+  @param Description            Boot option discription
+  @param Position               Position of the new load option to put in the ****Order variable.
+  @param Attributes             Boot option attributes
+  @param OptionalData           Optional data of the boot option.
+  @param OptionalDataSize       Size of the optional data of the boot option
+
+  @return boot option number
+**/
 UINTN
 RegisterFvBootOption (
   EFI_GUID                         *FileGuid,
@@ -277,7 +279,11 @@ RegisterFvBootOption (
 }
 
 
+/**
+  Boot manager wait callback
 
+  @param TimeoutRemain The remaingin timeout period
+**/
 VOID
 EFIAPI
 PlatformBootManagerWaitCallback (
@@ -331,16 +337,15 @@ EFI_GUID gUefiShellFileGuid = { 0x7C04A583, 0x9E3E, 0x4f1c, { 0xAD, 0x65, 0xE0, 
 #define INTERNAL_UEFI_SHELL_NAME      L"Internal UEFI Shell 2.0"
 #define UEFI_HARD_DRIVE_NAME          L"UEFI Hard Drive"
 
+/**
+   Registers default boot option
+**/
+
 VOID
 RegisterDefaultBootOption (
   VOID
   )
 {
-#if 0
-  EFI_DEVICE_PATH_PROTOCOL           *DevicePath;
-  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
-  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
-#endif
   UINT16                             *ShellData;
   UINT32                             ShellDataSize;
 
@@ -372,6 +377,13 @@ RegisterDefaultBootOption (
 
 }
 
+/**
+  Registers/Unregisters boot option hotkey
+
+  @param OptionNumber  The boot option number for the key option.
+  @param Key           The the key input
+  @param Add           Flag to indicate to add or remove a key
+**/
 VOID
 RegisterBootOptionHotkey (
   UINT16                       OptionNumber,
@@ -396,6 +408,14 @@ RegisterBootOptionHotkey (
   }
 }
 
+
+/**
+  Detect key press callback
+
+  @param    The key data
+
+  @retval   EFI_SUCCESS
+**/
 EFI_STATUS
 EFIAPI
 DetectKeypressCallback (
@@ -461,6 +481,16 @@ RegisterStaticHotkey (
 
 }
 
+
+
+/**
+  Returns the boot option type of a device
+
+  @param DevicePath             The path of device whose boot option type
+                                to be returned
+  @retval -1                    Device type not found
+  @retval > -1                  Device type found
+**/
 UINT8
 BootOptionType (
   IN EFI_DEVICE_PATH_PROTOCOL   *DevicePath
@@ -546,6 +576,15 @@ BootOptionPriority (
     return 100;
 }
 
+/**
+   Compares boot priorities of two boot options
+
+  @param Left       The left boot option
+  @param Right      The right boot option
+
+  @return           The difference between the Left and Right
+                    boot options
+ **/
 INTN
 EFIAPI
 CompareBootOption (

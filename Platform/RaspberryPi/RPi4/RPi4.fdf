@@ -135,6 +135,14 @@ DATA = {
 0x001e0000|0x00010000
 gRaspberryPiTokenSpaceGuid.PcdNvStorageFtwSpareBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
 
+#
+# This is just for documentation purposes! The DTB reserved space is not part of the FD,
+# but this is exactly where it is expected to be.
+#
+# 0x001f0000|0x10000
+# gRaspberryPiTokenSpaceGuid.PcdFdtBaseAddress|gRaspberryPiTokenSpaceGuid.PcdFdtSize
+#
+
 ################################################################################
 #
 # FV Section
@@ -298,14 +306,6 @@ READ_LOCK_STATUS   = TRUE
   # Pi logo (splash screen)
   #
   INF Platform/RaspberryPi/Drivers/LogoDxe/LogoDxe.inf
-
-  #
-  # Device Tree support (used by FdtDxe)
-  # GUIDs should match gRaspberryPi#####FdtGuid's from the .dec
-  #
- FILE FREEFORM = 80AB6833-CAE4-4CEE-B59D-EB2039B05551 {
-    SECTION RAW = Platform/RaspberryPi/$(PLATFORM_NAME)/DeviceTree/bcm2711-rpi-4-b.dtb
-  }
 
 [FV.FVMAIN_COMPACT]
 FvAlignment        = 16
