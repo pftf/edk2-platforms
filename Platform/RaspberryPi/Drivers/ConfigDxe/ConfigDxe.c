@@ -22,6 +22,7 @@
 #include <Library/NetLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
+#include <Net/Genet.h>
 #include <Protocol/NonDiscoverableDevice.h>
 #include <Protocol/RpiFirmware.h>
 #include "ConfigDxeFormSetGuid.h"
@@ -82,6 +83,23 @@ STATIC HII_VENDOR_DEVICE_PATH mVendorDevicePath = {
   }
 };
 
+STATIC EFI_ACPI_ADDRESS_SPACE_DESCRIPTOR mBcmNetDesc[] = {
+  {
+    ACPI_ADDRESS_SPACE_DESCRIPTOR,                    // Desc
+    sizeof (EFI_ACPI_ADDRESS_SPACE_DESCRIPTOR) - 3,   // Len
+    ACPI_ADDRESS_SPACE_TYPE_MEM,                      // ResType
+    0,                                                // GenFlag
+    0,                                                // SpecificFlag
+    32,                                               // AddrSpaceGranularity
+    GENET_BASE_ADDRESS,                               // AddrRangeMin
+    GENET_BASE_ADDRESS +  GENET_LENGTH - 1,           // AddrRangeMax
+    0,                                                // AddrTranslationOffset
+    GENET_LENGTH,                                     // AddrLen
+  }, {
+    ACPI_END_TAG_DESCRIPTOR                           // Desc
+  }
+};
+
 STATIC GENET_DEVICE  mGenetDevice = {
   {
     {
@@ -109,7 +127,7 @@ STATIC GENET_DEVICE  mGenetDevice = {
     &gBcmNetNonDiscoverableDeviceGuid,
     NonDiscoverableDeviceDmaTypeCoherent,
     NULL,
-    NULL //saedbg - add device info
+    mBcmNetDesc
   }
 };
 

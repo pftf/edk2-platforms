@@ -73,6 +73,7 @@
   gBcm27xxTokenSpaceGuid.PcdBcm27xxRegistersAddress
   gBcm283xTokenSpaceGuid.PcdBcm283xRegistersAddress
   gBcmNetTokenSpaceGuid.PcdBcmGenetMacAddress
+  gBcmNetTokenSpaceGuid.PcdBcmGenetRegistersAddress
   gRaspberryPiTokenSpaceGuid.PcdCpuClock
   gRaspberryPiTokenSpaceGuid.PcdCustomCpuClock
   gRaspberryPiTokenSpaceGuid.PcdSdIsArasan
