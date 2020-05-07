@@ -22,6 +22,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   Platform/RaspberryPi/RaspberryPi.dec
+  Silicon/Broadcom/Bcm27xx/Bcm27xx.dec
   Silicon/Broadcom/Drivers/Net/BcmNet.dec
 
 [LibraryClasses]
@@ -34,10 +35,10 @@
   gRaspberryPiFirmwareProtocolGuid              ## CONSUMES
 
 [Pcd]
-  gBcmNetTokenSpaceGuid.PcdBcmGenetMacAddress   ## SOMETIMES_PRODUCES
+  gRaspberryPiTokenSpaceGuid.PcdBcmGenetMacAddress   ## SOMETIMES_PRODUCES
 
 [FixedPcd]
-  gBcmNetTokenSpaceGuid.PcdBcmGenetRegistersAddress
+  gBcm27xxTokenSpaceGuid.PcdBcmGenetRegistersAddress
 
 [Depex]
   gRaspberryPiFirmwareProtocolGuid

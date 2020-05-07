@@ -22,8 +22,7 @@
 #include <Library/NetLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
-#include <Net/Genet.h>
-#include <Protocol/BcmNetNonDiscoverableDevice.h>
+#include <Protocol/BcmGenetPlatformDevice.h>
 #include <Protocol/RpiFirmware.h>
 #include "ConfigDxeFormSetGuid.h"
 
@@ -56,8 +55,8 @@ typedef struct {
 } GENET_DEVICE_PATH;
 
 typedef struct {
-  GENET_DEVICE_PATH                DevicePath;
-  BCM_NET_NON_DISCOVERABLE_DEVICE  NonDiscoverableDevice;
+  GENET_DEVICE_PATH                   DevicePath;
+  BCM_GENET_PLATFORM_DEVICE_PROTOCOL  PlatformDevice;
 } GENET_DEVICE;
 #pragma pack ()
 
@@ -138,12 +137,12 @@ RegisterDevices (
     Bytes[0], Bytes[1], Bytes[2], Bytes[3], Bytes[4], Bytes[5]));
 
   CopyMem (&mGenetDevice.DevicePath.MacAddrDP.MacAddress, &MacAddr, NET_ETHER_ADDR_LEN);
-  CopyMem (&mGenetDevice.NonDiscoverableDevice.Mac, &MacAddr, NET_ETHER_ADDR_LEN);
+  CopyMem (&mGenetDevice.PlatformDevice.MacAddress, &MacAddr, NET_ETHER_ADDR_LEN);
 
   Handle = NULL;
   Status = gBS->InstallMultipleProtocolInterfaces (&Handle,
                   &gEfiDevicePathProtocolGuid,               &mGenetDevice.DevicePath,
-                  &gBcmNetNonDiscoverableDeviceProtocolGuid, &mGenetDevice.NonDiscoverableDevice,
+                  &gBcmGenetPlatformDeviceProtocolGuid,      &mGenetDevice.PlatformDevice,
                   NULL);
   ASSERT_EFI_ERROR (Status);
 

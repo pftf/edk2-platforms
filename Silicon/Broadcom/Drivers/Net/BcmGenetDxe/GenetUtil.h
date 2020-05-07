@@ -13,7 +13,7 @@
 #include <Uefi.h>
 
 #include <Protocol/DriverSupportedEfiVersion.h>
-#include <Protocol/BcmNetNonDiscoverableDevice.h>
+#include <Protocol/BcmGenetPlatformDevice.h>
 #include <Protocol/SimpleNetwork.h>
 #include <Library/DebugLib.h>
 #include <Library/DevicePathLib.h>
@@ -179,7 +179,7 @@ typedef struct {
   EFI_SIMPLE_NETWORK_PROTOCOL     Snp;
   EFI_SIMPLE_NETWORK_MODE         SnpMode;
 
-  BCM_NET_NON_DISCOVERABLE_DEVICE *Dev;
+  BCM_GENET_PLATFORM_DEVICE_PROTOCOL *Dev;
 
   GENERIC_PHY_PRIVATE_DATA        Phy;
 

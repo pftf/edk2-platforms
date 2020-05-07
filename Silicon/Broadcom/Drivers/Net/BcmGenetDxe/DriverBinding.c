@@ -16,9 +16,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 
-#include <Net/Genet.h>
-
-#include <Protocol/BcmNetNonDiscoverableDevice.h>
+#include <Protocol/BcmGenetPlatformDevice.h>
 
 #include "GenetUtil.h"
 
@@ -83,14 +81,14 @@ GenetDriverBindingSupported (
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath
   )
 {
-  BCM_NET_NON_DISCOVERABLE_DEVICE    *Dev;
+  BCM_GENET_PLATFORM_DEVICE_PROTOCOL *Dev;
   EFI_STATUS                         Status;
 
   //
   //  Connect to the non-discoverable device
   //
   Status = gBS->OpenProtocol (ControllerHandle,
-                              &gBcmNetNonDiscoverableDeviceProtocolGuid,
+                              &gBcmGenetPlatformDeviceProtocolGuid,
                               (VOID **) &Dev,
                               This->DriverBindingHandle,
                               ControllerHandle,
@@ -105,7 +103,7 @@ GenetDriverBindingSupported (
   // Clean up.
   //
   gBS->CloseProtocol (ControllerHandle,
-                      &gBcmNetNonDiscoverableDeviceProtocolGuid,
+                      &gBcmGenetPlatformDeviceProtocolGuid,
                       This->DriverBindingHandle,
                       ControllerHandle);
 
@@ -150,7 +148,7 @@ GenetDriverBindingStart (
   }
 
   Status = gBS->OpenProtocol (ControllerHandle,
-                              &gBcmNetNonDiscoverableDeviceProtocolGuid,
+                              &gBcmGenetPlatformDeviceProtocolGuid,
                               (VOID **)&Genet->Dev,
                               This->DriverBindingHandle,
                               ControllerHandle,
@@ -197,8 +195,8 @@ GenetDriverBindingStart (
   Genet->SnpMode.MediaPresent = FALSE;
   SetMem (&Genet->SnpMode.BroadcastAddress, sizeof (EFI_MAC_ADDRESS), 0xff);
 
-  CopyMem (&Genet->SnpMode.PermanentAddress, &Genet->Dev->Mac, sizeof(EFI_MAC_ADDRESS));
-  CopyMem (&Genet->SnpMode.CurrentAddress, &Genet->Dev->Mac, sizeof(EFI_MAC_ADDRESS));
+  CopyMem (&Genet->SnpMode.PermanentAddress, &Genet->Dev->MacAddress, sizeof(EFI_MAC_ADDRESS));
+  CopyMem (&Genet->SnpMode.CurrentAddress, &Genet->Dev->MacAddress, sizeof(EFI_MAC_ADDRESS));
 
   Status = gBS->InstallMultipleProtocolInterfaces (&ControllerHandle,
                                                    &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
@@ -207,7 +205,7 @@ GenetDriverBindingStart (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "GenetDriverBindingStart: Couldn't install protocol interfaces: %r\n", Status));
     gBS->CloseProtocol (ControllerHandle,
-                        &gBcmNetNonDiscoverableDeviceProtocolGuid,
+                        &gBcmGenetPlatformDeviceProtocolGuid,
                         This->DriverBindingHandle,
                         ControllerHandle);
     goto FreeDevice;
@@ -278,7 +276,7 @@ GenetDriverBindingStop (
   GenetDmaFree (Genet);
 
   Status = gBS->CloseProtocol (ControllerHandle,
-                               &gBcmNetNonDiscoverableDeviceProtocolGuid,
+                               &gBcmGenetPlatformDeviceProtocolGuid,
                                This->DriverBindingHandle,
                                ControllerHandle);
   ASSERT_EFI_ERROR (Status);

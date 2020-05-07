@@ -46,7 +46,7 @@
   UefiLib
 
 [Protocols]
-  gBcmNetNonDiscoverableDeviceProtocolGuid    ## TO_START
+  gBcmGenetPlatformDeviceProtocolGuid         ## TO_START
   gEfiDevicePathProtocolGuid                  ## BY_START
   gEfiSimpleNetworkProtocolGuid               ## BY_START
 

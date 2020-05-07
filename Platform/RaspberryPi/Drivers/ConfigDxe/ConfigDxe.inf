@@ -59,7 +59,7 @@
   gEfiEndOfDxeEventGroupGuid
 
 [Protocols]
-  gBcmNetNonDiscoverableDeviceProtocolGuid        ## PRODUCES
+  gBcmGenetPlatformDeviceProtocolGuid             ## PRODUCES
   gRaspberryPiFirmwareProtocolGuid                ## CONSUMES
   gRaspberryPiConfigAppliedProtocolGuid           ## PRODUCES
 
@@ -70,9 +70,9 @@
 
 [Pcd]
   gBcm27xxTokenSpaceGuid.PcdBcm27xxRegistersAddress
+  gBcm27xxTokenSpaceGuid.PcdBcmGenetRegistersAddress
   gBcm283xTokenSpaceGuid.PcdBcm283xRegistersAddress
-  gBcmNetTokenSpaceGuid.PcdBcmGenetMacAddress
-  gBcmNetTokenSpaceGuid.PcdBcmGenetRegistersAddress
+  gRaspberryPiTokenSpaceGuid.PcdBcmGenetMacAddress
   gRaspberryPiTokenSpaceGuid.PcdCpuClock
   gRaspberryPiTokenSpaceGuid.PcdCustomCpuClock
   gRaspberryPiTokenSpaceGuid.PcdSdIsArasan
