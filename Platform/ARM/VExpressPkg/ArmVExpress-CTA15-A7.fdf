@@ -103,7 +103,7 @@ FvNameGuid         = 73dcb643-3862-4904-9076-a94af1890243
   # Multimedia Card Interface
   #
   INF EmbeddedPkg/Universal/MmcDxe/MmcDxe.inf
-  INF ArmPlatformPkg/Drivers/PL180MciDxe/PL180MciDxe.inf
+  INF Platform/ARM/VExpressPkg/Drivers/PL180MciDxe/PL180MciDxe.inf
 
   #
   # Filesystems
@@ -126,7 +126,7 @@ FvNameGuid         = 73dcb643-3862-4904-9076-a94af1890243
   #
   # USB support
   #
-  INF EmbeddedPkg/Drivers/Isp1761UsbDxe/Isp1761UsbDxe.inf
+  INF Platform/ARM/VExpressPkg/Drivers/Isp1761UsbDxe/Isp1761UsbDxe.inf
 
   #
   # Android Fastboot
@@ -143,7 +143,7 @@ FvNameGuid         = 73dcb643-3862-4904-9076-a94af1890243
   #
 !include Platform/ARM/VExpressPkg/ArmVExpress-networking.fdf.inc
 
-  INF EmbeddedPkg/Drivers/Lan9118Dxe/Lan9118Dxe.inf
+  INF Platform/ARM/VExpressPkg/Drivers/Lan9118Dxe/Lan9118Dxe.inf
 
   #
   # UEFI application

@@ -1,25 +1,8 @@
 #
-#  Copyright (c) 2018, ARM Limited. All rights reserved.
+#  Copyright (c) 2018-2020, ARM Limited. All rights reserved.
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
-
-################################################################################
-#
-# Defines Section - statements that will be processed to create a Makefile.
-#
-################################################################################
-[Defines]
-  PLATFORM_NAME                  = ArmSgi
-  PLATFORM_GUID                  = 3a6b2eae-0275-4b6e-a5d1-bd2ba1ce1fae
-  PLATFORM_VERSION               = 0.1
-  DSC_SPECIFICATION              = 0x0001001B
-  OUTPUT_DIRECTORY               = Build/$(PLATFORM_NAME)
-  SUPPORTED_ARCHITECTURES        = AARCH64|ARM
-  BUILD_TARGETS                  = NOOPT|DEBUG|RELEASE
-  SKUID_IDENTIFIER               = DEFAULT
-  FLASH_DEFINITION               = Platform/ARM/SgiPkg/SgiPlatform.fdf
-  BUILD_NUMBER                   = 1
 
 !include Platform/ARM/VExpressPkg/ArmVExpress.dsc.inc
 
@@ -126,10 +109,6 @@
   gArmTokenSpaceGuid.PcdSystemMemoryBase|0x80000000
   gArmTokenSpaceGuid.PcdSystemMemorySize|0x7F000000
 
-  # GIC Base Addresses
-  gArmTokenSpaceGuid.PcdGicDistributorBase|0x30000000
-  gArmTokenSpaceGuid.PcdGicRedistributorsBase|0x300C0000
-
   #
   # PCIe
   #
@@ -177,10 +156,6 @@
   gEmbeddedTokenSpaceGuid.PcdMetronomeTickPeriod|1000
   gEmbeddedTokenSpaceGuid.PcdTimerPeriod|1000
 
-  # ARM Cores and Clusters
-  gArmPlatformTokenSpaceGuid.PcdCoreCount|4
-  gArmPlatformTokenSpaceGuid.PcdClusterCount|2
-
   # Virtio Disk
   gArmSgiTokenSpaceGuid.PcdVirtioBlkBaseAddress|0x1c130000
   gArmSgiTokenSpaceGuid.PcdVirtioBlkSize|0x10000
@@ -188,7 +163,7 @@
 
   # Ethernet / Virtio Network
 !ifdef EDK2_ENABLE_SMSC_91X
-  gEmbeddedTokenSpaceGuid.PcdLan91xDxeBaseAddress|0x18000000
+  gArmVExpressTokenSpaceGuid.PcdLan91xDxeBaseAddress|0x18000000
 !endif
   gArmSgiTokenSpaceGuid.PcdVirtioNetBaseAddress|0x1c150000
   gArmSgiTokenSpaceGuid.PcdVirtioNetSize|0x10000
@@ -277,10 +252,6 @@
   # ACPI Support
   #
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
-  Platform/ARM/SgiPkg/AcpiTables/Sgi575AcpiTables.inf
-  Platform/ARM/SgiPkg/AcpiTables/RdN1EdgeAcpiTables.inf
-  Platform/ARM/SgiPkg/AcpiTables/RdN1EdgeX2AcpiTables.inf
-  Platform/ARM/SgiPkg/AcpiTables/RdE1EdgeAcpiTables.inf
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
 
   #
@@ -313,7 +284,7 @@
 
   # SMSC LAN 91C111 / Virtio Network
 !ifdef EDK2_ENABLE_SMSC_91X
-  EmbeddedPkg/Drivers/Lan91xDxe/Lan91xDxe.inf
+  Platform/ARM/VExpressPkg/Drivers/Lan91xDxe/Lan91xDxe.inf
 !endif
   OvmfPkg/VirtioNetDxe/VirtioNet.inf
 

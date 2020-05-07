@@ -1,6 +1,6 @@
 #  @file
 #
-#  Copyright 2017-2019 NXP.
+#  Copyright 2017-2020 NXP
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -93,6 +93,10 @@
   CapsuleLib|MdeModulePkg/Library/DxeCapsuleLibNull/DxeCapsuleLibNull.inf
   NonDiscoverableDeviceRegistrationLib|MdeModulePkg/Library/NonDiscoverableDeviceRegistrationLib/NonDiscoverableDeviceRegistrationLib.inf
   ReportStatusCodeLib|MdeModulePkg/Library/DxeReportStatusCodeLib/DxeReportStatusCodeLib.inf
+
+  I2cLib|Silicon/NXP/Library/I2cLib/I2cLib.inf
+  ResetSystemLib|ArmPkg/Library/ArmSmcPsciResetSystemLib/ArmSmcPsciResetSystemLib.inf
+  IoAccessLib|Silicon/NXP/Library/IoAccessLib/IoAccessLib.inf
 
 [LibraryClasses.common.SEC]
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf

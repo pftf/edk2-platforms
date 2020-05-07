@@ -52,3 +52,21 @@
   #
   gArmVExpressTokenSpaceGuid.PcdAndroidFastbootNvmDevicePath|""|VOID*|0x00000006
   gArmVExpressTokenSpaceGuid.PcdAndroidFastbootProductName|""|VOID*|0x00000007
+
+  ## PL180 MCI
+  gArmVExpressTokenSpaceGuid.PcdPL180SysMciRegAddress|0x00000000|UINT32|0x00000009
+  gArmVExpressTokenSpaceGuid.PcdPL180MciBaseAddress|0x00000000|UINT32|0x0000000A
+
+  # LAN91x Ethernet Driver PCDs
+  gArmVExpressTokenSpaceGuid.PcdLan91xDxeBaseAddress|0x0|UINT32|0x0000000B
+
+  # LAN9118 Ethernet Driver PCDs
+  gArmVExpressTokenSpaceGuid.PcdLan9118DxeBaseAddress|0x0|UINT32|0x00000025
+  gArmVExpressTokenSpaceGuid.PcdLan9118DefaultMacAddress|0x0|UINT64|0x00000026
+  gArmVExpressTokenSpaceGuid.PcdLan9118DefaultNegotiationTimeout|4000|UINT32|0x00000027
+  # The default feature mask below disables full duplex negotiation, since full
+  # duplex operation is suspected to be broken in the driver.
+  gArmVExpressTokenSpaceGuid.PcdLan9118NegotiationFeatureMask|0xFFFFFEBF|UINT32|0x00000028
+
+  # ISP1761 USB OTG Controller
+  gArmVExpressTokenSpaceGuid.PcdIsp1761BaseAddress|0|UINT32|0x00000029

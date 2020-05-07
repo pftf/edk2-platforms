@@ -2,7 +2,7 @@
 #
 #  LS1043ARDB Board package.
 #
-#  Copyright 2017-2019 NXP
+#  Copyright 2017-2020 NXP
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -22,15 +22,11 @@
   OUTPUT_DIRECTORY               = Build/LS1043aRdbPkg
   FLASH_DEFINITION               = Platform/NXP/LS1043aRdbPkg/LS1043aRdbPkg.fdf
 
-!include Platform/NXP/NxpQoriqLs.dsc.inc
+!include Silicon/NXP/NxpQoriqLs.dsc.inc
 !include Silicon/NXP/LS1043A/LS1043A.dsc.inc
 
 [LibraryClasses.common]
-  SocLib|Silicon/NXP/Library/SocLib/LS1043aSocLib.inf
-  ArmPlatformLib|Platform/NXP/LS1043aRdbPkg/Library/PlatformLib/ArmPlatformLib.inf
-  ResetSystemLib|ArmPkg/Library/ArmSmcPsciResetSystemLib/ArmSmcPsciResetSystemLib.inf
-  SerialPortLib|Silicon/NXP/Library/DUartPortLib/DUartPortLib.inf
-  IoAccessLib|Silicon/NXP/Library/IoAccessLib/IoAccessLib.inf
+  ArmPlatformLib|Platform/NXP/LS1043aRdbPkg/Library/ArmPlatformLib/ArmPlatformLib.inf
   RealTimeClockLib|Silicon/Maxim/Library/Ds1307RtcLib/Ds1307RtcLib.inf
 
 [PcdsFixedAtBuild.common]
@@ -43,11 +39,6 @@
   gArmTokenSpaceGuid.PcdSystemMemorySize|0x7BE00000
   gArmPlatformTokenSpaceGuid.PcdSystemMemoryUefiRegionSize|0x02000000
 
-  #
-  # Board Specific Pcds
-  #
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x021c0500
-  gNxpQoriqLsTokenSpaceGuid.PcdSerdes2Enabled|FALSE
   gNxpQoriqLsTokenSpaceGuid.PcdPlatformFreqDiv|0x1
 
   #

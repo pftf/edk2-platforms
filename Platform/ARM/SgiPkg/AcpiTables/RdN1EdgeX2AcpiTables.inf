@@ -10,18 +10,20 @@
 [Defines]
   INF_VERSION                    = 0x0001001A
   BASE_NAME                      = RdN1EdgeX2AcpiTables
-  FILE_GUID                      = 82a34150-0fc6-45f4-8ea0-f0a4660cf35d
+  FILE_GUID                      = c712719a-0aaf-438c-9cdd-35ab4d60207d  # gArmSgiAcpiTablesGuid
   MODULE_TYPE                    = USER_DEFINED
   VERSION_STRING                 = 1.0
 
 [Sources]
   Dbg2.aslc
+  SsdtRos.asl
   Fadt.aslc
   Gtdt.aslc
   Iort.aslc
   Mcfg.aslc
   RdN1Edge/Dsdt.asl
   RdN1EdgeX2/Madt.aslc
+  RdN1EdgeX2/Srat.aslc
   Spcr.aslc
   Ssdt.asl
 
@@ -37,6 +39,11 @@
   gArmPlatformTokenSpaceGuid.PcdClusterCount
   gArmPlatformTokenSpaceGuid.PcdSerialDbgRegisterBase
   gArmPlatformTokenSpaceGuid.PL011UartInterrupt
+
+  gArmTokenSpaceGuid.PcdSystemMemoryBase
+  gArmTokenSpaceGuid.PcdSystemMemorySize
+  gArmSgiTokenSpaceGuid.PcdDramBlock2Base
+  gArmSgiTokenSpaceGuid.PcdDramBlock2Size
 
   gArmTokenSpaceGuid.PcdArmArchTimerSecIntrNum
   gArmTokenSpaceGuid.PcdArmArchTimerIntrNum

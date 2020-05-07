@@ -127,7 +127,7 @@
   # Dual serial port library
   PL011UartClockLib|ArmPlatformPkg/Library/PL011UartClockLib/PL011UartClockLib.inf
   PL011UartLib|ArmPlatformPkg/Library/PL011UartLib/PL011UartLib.inf
-  SerialPortLib|Platform/RaspberryPi/Library/DualSerialPortLib/DualSerialPortLib.inf
+  SerialPortLib|Platform/RaspberryPi/Library/DualSerialPortLib/DebugDualSerialPortLib.inf
 
   # Cryptographic libraries
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
@@ -238,10 +238,10 @@
 
 [BuildOptions]
   GCC:*_*_*_CC_FLAGS          = -DRPI_MODEL=4
+  GCC:*_*_*_PP_FLAGS          = -DRPI_MODEL=4
   GCC:*_*_*_ASLPP_FLAGS       = -DRPI_MODEL=4
   GCC:*_*_*_ASLCC_FLAGS       = -DRPI_MODEL=4
   GCC:*_*_*_VFRPP_FLAGS       = -DRPI_MODEL=4
-  GCC:*_*_AARCH64_DLINK_FLAGS = -Wl,--fix-cortex-a53-843419
   GCC:RELEASE_*_*_CC_FLAGS    = -DMDEPKG_NDEBUG -DNDEBUG
 
 [BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER]
@@ -420,7 +420,7 @@
   gArmPlatformTokenSpaceGuid.PL011UartClkInHz|48000000
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride|4
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|500000000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|1000000000
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialFifoControl|0x27
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialExtendedTxFifoSize|8
   gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate|115200
@@ -536,7 +536,10 @@
   #
   # PEI Phase modules
   #
-  ArmPlatformPkg/PrePi/PeiUniCore.inf
+  ArmPlatformPkg/PrePi/PeiUniCore.inf {
+    <LibraryClasses>
+      SerialPortLib|Platform/RaspberryPi/Library/DualSerialPortLib/DualSerialPortLib.inf
+  }
 
   #
   # DXE
@@ -584,7 +587,10 @@
   MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
   MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
   MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
-  MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
+  MdeModulePkg/Universal/SerialDxe/SerialDxe.inf {
+    <LibraryClasses>
+      SerialPortLib|Platform/RaspberryPi/Library/DualSerialPortLib/DualSerialPortLib.inf
+  }
   Platform/RaspberryPi/Drivers/DisplayDxe/DisplayDxe.inf
   EmbeddedPkg/Drivers/ConsolePrefDxe/ConsolePrefDxe.inf
 

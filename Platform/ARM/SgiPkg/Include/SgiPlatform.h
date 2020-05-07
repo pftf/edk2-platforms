@@ -1,6 +1,6 @@
 /** @file
 *
-*  Copyright (c) 2018, ARM Limited. All rights reserved.
+*  Copyright (c) 2018-2020, ARM Limited. All rights reserved.
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
 *
@@ -45,11 +45,6 @@
 #define SGI_SUBSYS_GENERIC_WDOG_BASE              0x2A440000
 #define SGI_SUBSYS_GENERIC_WDOG_SZ                SIZE_128KB
 
-// Sub System Peripherals - GIC
-#define SGI_SUBSYS_GENERIC_GIC_BASE               0x30000000
-#define SGI_SUBSYS_GENERIC_GICR_BASE              0x300C0000
-#define SGI_SUBSYS_GENERIC_GIC_SZ                 SIZE_1MB
-
 // Expansion AXI - Platform Peripherals - HDLCD1
 #define SGI_EXP_PLAT_PERIPH_HDLCD1_BASE           0x7FF60000
 #define SGI_EXP_PLAT_PERIPH_HDLCD1_SZ             SIZE_64KB
@@ -75,6 +70,11 @@
 #define RD_N1_EDGE_CONF_ID                        0x1
 #define RD_E1_EDGE_CONF_ID                        0x2
 
+// RD-Daniel Platform Identification values
+#define RD_DANIEL_PART_NUM                        0x78A
+#define RD_DANIEL_CFGM_CONF_ID                    0x1
+#define RD_DANIEL_CFGXLR_CONF_ID                  0x2
+
 #define SGI_CONFIG_MASK                           0x0F
 #define SGI_CONFIG_SHIFT                          0x1C
 #define SGI_PART_NUM_MASK                         0xFFF
@@ -84,6 +84,14 @@
 
 // Remote chip address offset (4TB per chip)
 #define SGI_REMOTE_CHIP_MEM_OFFSET(n)             ((1ULL << 42) * (n))
+
+// Base address of the DRAM1 block in a remote chip
+#define SYSTEM_MEMORY_BASE_REMOTE(ChipId) \
+          (SGI_REMOTE_CHIP_MEM_OFFSET (ChipId) + FixedPcdGet64 (PcdSystemMemoryBase))
+
+// Base address of the DRAM2 block in a remote chip
+#define DRAM_BLOCK2_BASE_REMOTE(ChipId) \
+          (SGI_REMOTE_CHIP_MEM_OFFSET (ChipId) + FixedPcdGet64 (PcdDramBlock2Base))
 
 // ARM platform description data.
 typedef struct {

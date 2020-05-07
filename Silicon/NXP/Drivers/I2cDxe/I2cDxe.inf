@@ -3,7 +3,7 @@
 #  Component description file for I2c driver
 #
 #  Copyright (c) 2015, Freescale Semiconductor, Inc. All rights reserved.
-#  Copyright 2017-2019 NXP
+#  Copyright 2017-2020 NXP
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -13,7 +13,7 @@
   INF_VERSION                    = 0x0001001A
   BASE_NAME                      = I2cDxe
   FILE_GUID                      = 5f2927ba-1b04-4d5f-8bef-2b50c635d1e7
-  MODULE_TYPE                    = DXE_DRIVER
+  MODULE_TYPE                    = DXE_RUNTIME_DRIVER
   VERSION_STRING                 = 1.0
   ENTRY_POINT                    = I2cDxeEntryPoint
   UNLOAD                         = I2cDxeUnload
@@ -27,6 +27,7 @@
   ArmLib
   BaseMemoryLib
   DevicePathLib
+  I2cLib
   IoLib
   MemoryAllocationLib
   PcdLib
@@ -35,6 +36,7 @@
   UefiBootServicesTableLib
   UefiDriverEntryPoint
   UefiLib
+  UefiRuntimeLib
 
 [Guids]
   gNxpNonDiscoverableI2cMasterGuid
@@ -47,12 +49,6 @@
 [Protocols]
   gEdkiiNonDiscoverableDeviceProtocolGuid    ## TO_START
   gEfiI2cMasterProtocolGuid                  ## BY_START
-
-[Pcd]
-  gNxpQoriqLsTokenSpaceGuid.PcdI2cSpeed
-  gNxpQoriqLsTokenSpaceGuid.PcdI2c0BaseAddr
-  gNxpQoriqLsTokenSpaceGuid.PcdI2cSize
-  gNxpQoriqLsTokenSpaceGuid.PcdNumI2cController
 
 [Depex]
   TRUE
