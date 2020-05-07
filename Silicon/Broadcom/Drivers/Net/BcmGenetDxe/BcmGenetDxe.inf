@@ -45,14 +45,10 @@
   UefiDriverEntryPoint
   UefiLib
 
-[Guids]
-  gBcmNetNonDiscoverableDeviceGuid
-
 [Protocols]
-  gEdkiiNonDiscoverableDeviceProtocolGuid     ## TO_START
+  gBcmNetNonDiscoverableDeviceProtocolGuid    ## TO_START
   gEfiDevicePathProtocolGuid                  ## BY_START
   gEfiSimpleNetworkProtocolGuid               ## BY_START
 
-[Pcd]
-  gBcmNetTokenSpaceGuid.PcdBcmGenetMacAddress
+
 

@@ -55,12 +55,11 @@
   UefiRuntimeServicesTableLib
 
 [Guids]
-  gBcmNetNonDiscoverableDeviceGuid
   gConfigDxeFormSetGuid
   gEfiEndOfDxeEventGroupGuid
 
 [Protocols]
-  gEdkiiNonDiscoverableDeviceProtocolGuid         ## PRODUCES
+  gBcmNetNonDiscoverableDeviceProtocolGuid        ## PRODUCES
   gRaspberryPiFirmwareProtocolGuid                ## CONSUMES
   gRaspberryPiConfigAppliedProtocolGuid           ## PRODUCES
 

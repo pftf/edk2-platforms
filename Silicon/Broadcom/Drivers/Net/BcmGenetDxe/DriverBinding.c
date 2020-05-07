@@ -18,7 +18,7 @@
 
 #include <Net/Genet.h>
 
-#include <Protocol/NonDiscoverableDevice.h>
+#include <Protocol/BcmNetNonDiscoverableDevice.h>
 
 #include "GenetUtil.h"
 
@@ -83,33 +83,29 @@ GenetDriverBindingSupported (
   IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath
   )
 {
-  NON_DISCOVERABLE_DEVICE    *Dev;
-  EFI_STATUS                 Status;
+  BCM_NET_NON_DISCOVERABLE_DEVICE    *Dev;
+  EFI_STATUS                         Status;
 
   //
   //  Connect to the non-discoverable device
   //
   Status = gBS->OpenProtocol (ControllerHandle,
-                              &gEdkiiNonDiscoverableDeviceProtocolGuid,
+                              &gBcmNetNonDiscoverableDeviceProtocolGuid,
                               (VOID **) &Dev,
                               This->DriverBindingHandle,
                               ControllerHandle,
                               EFI_OPEN_PROTOCOL_BY_DRIVER);
   if (EFI_ERROR (Status)) {
     return Status;
-  }
-
-  if (CompareGuid (Dev->Type, &gBcmNetNonDiscoverableDeviceGuid)) {
-    Status = EFI_SUCCESS;
   } else {
-    Status = EFI_UNSUPPORTED;
+    Status = EFI_SUCCESS;
   }
 
   //
   // Clean up.
   //
   gBS->CloseProtocol (ControllerHandle,
-                      &gEdkiiNonDiscoverableDeviceProtocolGuid,
+                      &gBcmNetNonDiscoverableDeviceProtocolGuid,
                       This->DriverBindingHandle,
                       ControllerHandle);
 
@@ -145,7 +141,6 @@ GenetDriverBindingStart (
 {
   GENET_PRIVATE_DATA      *Genet;
   EFI_STATUS              Status;
-  UINT64                  MacAddr;
 
   // Allocate Resources
   Genet = AllocateZeroPool (sizeof (GENET_PRIVATE_DATA));
@@ -155,7 +150,7 @@ GenetDriverBindingStart (
   }
 
   Status = gBS->OpenProtocol (ControllerHandle,
-                              &gEdkiiNonDiscoverableDeviceProtocolGuid,
+                              &gBcmNetNonDiscoverableDeviceProtocolGuid,
                               (VOID **)&Genet->Dev,
                               This->DriverBindingHandle,
                               ControllerHandle,
@@ -172,7 +167,7 @@ GenetDriverBindingStart (
   }
 
   Genet->Signature = GENET_DRIVER_SIGNATURE;
-  Genet->RegBase = Genet->Dev->Resources[0].AddrRangeMin ;
+  Genet->RegBase = Genet->Dev->BaseAddress;
   Genet->Phy.PrivateData = Genet;
   Genet->Phy.Read = GenetPhyRead;
   Genet->Phy.Write = GenetPhyWrite;
@@ -202,9 +197,8 @@ GenetDriverBindingStart (
   Genet->SnpMode.MediaPresent = FALSE;
   SetMem (&Genet->SnpMode.BroadcastAddress, sizeof (EFI_MAC_ADDRESS), 0xff);
 
-  MacAddr = PcdGet64 (PcdBcmGenetMacAddress);
-  CopyMem (&Genet->SnpMode.PermanentAddress, &MacAddr, NET_ETHER_ADDR_LEN);
-  CopyMem (&Genet->SnpMode.CurrentAddress, &MacAddr, NET_ETHER_ADDR_LEN);
+  CopyMem (&Genet->SnpMode.PermanentAddress, &Genet->Dev->Mac, sizeof(EFI_MAC_ADDRESS));
+  CopyMem (&Genet->SnpMode.CurrentAddress, &Genet->Dev->Mac, sizeof(EFI_MAC_ADDRESS));
 
   Status = gBS->InstallMultipleProtocolInterfaces (&ControllerHandle,
                                                    &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
@@ -213,7 +207,7 @@ GenetDriverBindingStart (
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "GenetDriverBindingStart: Couldn't install protocol interfaces: %r\n", Status));
     gBS->CloseProtocol (ControllerHandle,
-                        &gEdkiiNonDiscoverableDeviceProtocolGuid,
+                        &gBcmNetNonDiscoverableDeviceProtocolGuid,
                         This->DriverBindingHandle,
                         ControllerHandle);
     goto FreeDevice;
@@ -264,7 +258,7 @@ GenetDriverBindingStop (
                                 &gEfiSimpleNetworkProtocolGuid,
                                 (VOID **)&SnpProtocol
                                 );
-  ASSERT_EFI_ERROR (Status);								
+  ASSERT_EFI_ERROR (Status);
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -284,7 +278,7 @@ GenetDriverBindingStop (
   GenetDmaFree (Genet);
 
   Status = gBS->CloseProtocol (ControllerHandle,
-                               &gEdkiiNonDiscoverableDeviceProtocolGuid,
+                               &gBcmNetNonDiscoverableDeviceProtocolGuid,
                                This->DriverBindingHandle,
                                ControllerHandle);
   ASSERT_EFI_ERROR (Status);

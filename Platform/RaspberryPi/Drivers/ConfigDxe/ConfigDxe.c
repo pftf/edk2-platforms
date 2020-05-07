@@ -23,7 +23,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Net/Genet.h>
-#include <Protocol/NonDiscoverableDevice.h>
+#include <Protocol/BcmNetNonDiscoverableDevice.h>
 #include <Protocol/RpiFirmware.h>
 #include "ConfigDxeFormSetGuid.h"
 
@@ -56,8 +56,8 @@ typedef struct {
 } GENET_DEVICE_PATH;
 
 typedef struct {
-  GENET_DEVICE_PATH              DevicePath;
-  NON_DISCOVERABLE_DEVICE        NonDiscoverableDevice;
+  GENET_DEVICE_PATH                DevicePath;
+  BCM_NET_NON_DISCOVERABLE_DEVICE  NonDiscoverableDevice;
 } GENET_DEVICE;
 #pragma pack ()
 
@@ -83,24 +83,7 @@ STATIC HII_VENDOR_DEVICE_PATH mVendorDevicePath = {
   }
 };
 
-STATIC EFI_ACPI_ADDRESS_SPACE_DESCRIPTOR mBcmNetDesc[] = {
-  {
-    ACPI_ADDRESS_SPACE_DESCRIPTOR,                    // Desc
-    sizeof (EFI_ACPI_ADDRESS_SPACE_DESCRIPTOR) - 3,   // Len
-    ACPI_ADDRESS_SPACE_TYPE_MEM,                      // ResType
-    0,                                                // GenFlag
-    0,                                                // SpecificFlag
-    32,                                               // AddrSpaceGranularity
-    GENET_BASE_ADDRESS,                               // AddrRangeMin
-    GENET_BASE_ADDRESS +  GENET_LENGTH - 1,           // AddrRangeMax
-    0,                                                // AddrTranslationOffset
-    GENET_LENGTH,                                     // AddrLen
-  }, {
-    ACPI_END_TAG_DESCRIPTOR                           // Desc
-  }
-};
-
-STATIC GENET_DEVICE  mGenetDevice = {
+STATIC GENET_DEVICE mGenetDevice = {
   {
     {
       {
@@ -124,10 +107,8 @@ STATIC GENET_DEVICE  mGenetDevice = {
     }
   },
   {
-    &gBcmNetNonDiscoverableDeviceGuid,
-    NonDiscoverableDeviceDmaTypeCoherent,
-    NULL,
-    mBcmNetDesc
+    GENET_BASE_ADDRESS,
+    {{ 0 }}
   }
 };
 
@@ -157,11 +138,12 @@ RegisterDevices (
     Bytes[0], Bytes[1], Bytes[2], Bytes[3], Bytes[4], Bytes[5]));
 
   CopyMem (&mGenetDevice.DevicePath.MacAddrDP.MacAddress, &MacAddr, NET_ETHER_ADDR_LEN);
+  CopyMem (&mGenetDevice.NonDiscoverableDevice.Mac, &MacAddr, NET_ETHER_ADDR_LEN);
 
   Handle = NULL;
   Status = gBS->InstallMultipleProtocolInterfaces (&Handle,
-                  &gEfiDevicePathProtocolGuid,              &mGenetDevice.DevicePath,
-                  &gEdkiiNonDiscoverableDeviceProtocolGuid, &mGenetDevice.NonDiscoverableDevice,
+                  &gEfiDevicePathProtocolGuid,               &mGenetDevice.DevicePath,
+                  &gBcmNetNonDiscoverableDeviceProtocolGuid, &mGenetDevice.NonDiscoverableDevice,
                   NULL);
   ASSERT_EFI_ERROR (Status);
 
