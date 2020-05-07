@@ -20,42 +20,6 @@
 
 #include "GenetUtil.h"
 
-extern EFI_SIMPLE_NETWORK_PROTOCOL gGenetSimpleNetwork;
-
-EFI_STATUS
-EFIAPI
-GenetDriverBindingSupported (
-  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
-  IN EFI_HANDLE                   ControllerHandle,
-  IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath   OPTIONAL
-  );
-
-EFI_STATUS
-EFIAPI
-GenetDriverBindingStart (
-  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
-  IN EFI_HANDLE                   ControllerHandle,
-  IN EFI_DEVICE_PATH_PROTOCOL     *RemainingDevicePath   OPTIONAL
-  );
-
-EFI_STATUS
-EFIAPI
-GenetDriverBindingStop (
-  IN EFI_DRIVER_BINDING_PROTOCOL  *This,
-  IN EFI_HANDLE                   ControllerHandle,
-  IN UINTN                        NumberOfChildren,
-  IN EFI_HANDLE                   *ChildHandleBuffer   OPTIONAL
-  );
-
-GLOBAL_REMOVE_IF_UNREFERENCED EFI_DRIVER_BINDING_PROTOCOL gGenetDriverBinding = {
-  GenetDriverBindingSupported,
-  GenetDriverBindingStart,
-  GenetDriverBindingStop,
-  GENET_VERSION,
-  NULL,
-  NULL
-};
-
 /**
   Tests to see if this driver supports a given controller.
 
@@ -172,7 +136,7 @@ GenetDriverBindingStart (
   Genet->Phy.Configure = GenetPhyConfigure;
   Genet->PhyMode = GENET_PHY_MODE_RGMII;
   EfiInitializeLock (&Genet->Lock, TPL_CALLBACK);
-  Genet->Snp = gGenetSimpleNetwork;
+  CopyMem (&Genet->Snp, &gGenetSimpleNetworkTemplate, sizeof Genet->Snp);
   Genet->Snp.Mode = &Genet->SnpMode;
   Genet->SnpMode.State = EfiSimpleNetworkStopped;
   Genet->SnpMode.HwAddressSize = NET_ETHER_ADDR_LEN;
@@ -261,14 +225,14 @@ GenetDriverBindingStop (
     return Status;
   }
 
-  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS(SnpProtocol);
+  Genet = GENET_PRIVATE_DATA_FROM_SNP_THIS (SnpProtocol);
 
   ASSERT (Genet->ControllerHandle == ControllerHandle);
 
-  Status = gBS->UninstallMultipleProtocolInterfaces (ControllerHandle,
-                                                     &gEfiSimpleNetworkProtocolGuid, &Genet->Snp,
-                                                     NULL
-                                                     );
+  Status = gBS->UninstallProtocolInterface (ControllerHandle,
+                                            &gEfiSimpleNetworkProtocolGuid,
+                                            &Genet->Snp
+                                            );
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -289,6 +253,14 @@ GenetDriverBindingStop (
   return EFI_SUCCESS;
 }
 
+STATIC EFI_DRIVER_BINDING_PROTOCOL mGenetDriverBinding = {
+  GenetDriverBindingSupported,
+  GenetDriverBindingStart,
+  GenetDriverBindingStop,
+  GENET_VERSION,
+  NULL,
+  NULL
+};
 
 /**
   The entry point of GENET UEFI Driver.
@@ -313,7 +285,7 @@ GenetEntryPoint (
   Status = EfiLibInstallDriverBindingComponentName2 (
     ImageHandle,
     SystemTable,
-    &gGenetDriverBinding,
+    &mGenetDriverBinding,
     ImageHandle,
     &gGenetComponentName,
     &gGenetComponentName2
@@ -324,6 +296,4 @@ GenetEntryPoint (
   DEBUG ((DEBUG_INIT | DEBUG_INFO, "Installed GENET UEFI driver!\n"));
 
   return EFI_SUCCESS;
-
-
 }

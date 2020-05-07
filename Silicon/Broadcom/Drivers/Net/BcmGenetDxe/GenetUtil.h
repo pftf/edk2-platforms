@@ -202,6 +202,8 @@ typedef struct {
 extern EFI_COMPONENT_NAME_PROTOCOL            gGenetComponentName;
 extern EFI_COMPONENT_NAME2_PROTOCOL           gGenetComponentName2;
 
+extern CONST EFI_SIMPLE_NETWORK_PROTOCOL      gGenetSimpleNetworkTemplate;
+
 #define GENET_DRIVER_SIGNATURE                SIGNATURE_32('G', 'N', 'E', 'T')
 #define GENET_PRIVATE_DATA_FROM_SNP_THIS(a)   CR(a, GENET_PRIVATE_DATA, Snp, GENET_DRIVER_SIGNATURE)
 

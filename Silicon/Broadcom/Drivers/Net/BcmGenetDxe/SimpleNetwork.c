@@ -803,7 +803,7 @@ GenetSimpleNetworkMCastIPtoMAC (
 /// Simple Network Protocol instance
 ///
 GLOBAL_REMOVE_IF_UNREFERENCED
-EFI_SIMPLE_NETWORK_PROTOCOL gGenetSimpleNetwork = {
+CONST EFI_SIMPLE_NETWORK_PROTOCOL gGenetSimpleNetworkTemplate = {
   EFI_SIMPLE_NETWORK_PROTOCOL_REVISION,       // Revision
   GenetSimpleNetworkStart,                    // Start
   GenetSimpleNetworkStop,                     // Stop
