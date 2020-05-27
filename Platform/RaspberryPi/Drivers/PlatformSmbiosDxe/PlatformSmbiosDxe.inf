@@ -5,6 +5,7 @@
 #  Copyright (c) 2017, Andrei Warkentin <andrey.warkentin@gmail.com>
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Copyright (c) 2013 Linaro.org
+#  Copyright (c) 2020, ARM Limited. All rights reserved.
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -43,6 +44,7 @@
 [Protocols]
   gEfiSmbiosProtocolGuid           # PROTOCOL SOMETIMES_CONSUMED
   gRaspberryPiFirmwareProtocolGuid ## CONSUMES
+
 [Guids]
 
 [Depex]
@@ -54,3 +56,4 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString
   gRaspberryPiTokenSpaceGuid.PcdRamMoreThan3GB
   gRaspberryPiTokenSpaceGuid.PcdRamLimitTo3GB
+  gRaspberryPiTokenSpaceGuid.PcdAssetTag

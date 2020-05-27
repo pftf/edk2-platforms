@@ -87,6 +87,7 @@
   gRaspberryPiTokenSpaceGuid.PcdSystemTableMode
   gRaspberryPiTokenSpaceGuid.PcdRamMoreThan3GB
   gRaspberryPiTokenSpaceGuid.PcdRamLimitTo3GB
+  gRaspberryPiTokenSpaceGuid.PcdAssetTag
 
 [Depex]
   gPcdProtocolGuid AND gRaspberryPiFirmwareProtocolGuid

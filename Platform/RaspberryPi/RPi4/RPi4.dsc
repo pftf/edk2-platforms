@@ -1,6 +1,6 @@
 # @file
 #
-#  Copyright (c) 2011 - 2019, ARM Limited. All rights reserved.
+#  Copyright (c) 2011 - 2020, ARM Limited. All rights reserved.
 #  Copyright (c) 2017 - 2018, Andrei Warkentin <andrey.warkentin@gmail.com>
 #  Copyright (c) 2015 - 2016, Intel Corporation. All rights reserved.
 #  Copyright (c) 2014, Linaro Limited. All rights reserved.
@@ -507,6 +507,14 @@
   # 2 - SYSTEM_TABLE_MODE_DT
   #
   gRaspberryPiTokenSpaceGuid.PcdSystemTableMode|L"SystemTableMode"|gConfigDxeFormSetGuid|0x0|0
+
+  #
+  # Asset Tag string
+  #
+  # The default HII String PCD size must match the size of the variable used in HII,
+  # in this case ASSET_TAG_STR_MAX_LEN. Populate using spaces for now...
+  #
+  gRaspberryPiTokenSpaceGuid.PcdAssetTag|L"AssetTag"|gConfigDxeFormSetGuid|0x0|L"                "|NV,BS,RT
 
   #
   # Common UEFI ones.

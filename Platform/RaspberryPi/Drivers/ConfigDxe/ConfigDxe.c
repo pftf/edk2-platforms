@@ -2,6 +2,7 @@
  *
  *  Copyright (c) 2019 - 2020, ARM Limited. All rights reserved.
  *  Copyright (c) 2018 - 2019, Andrei Warkentin <andrey.warkentin@gmail.com>
+ *  Copyright (c) 2020, ARM Limited. All rights reserved.
  *
  *  SPDX-License-Identifier: BSD-2-Clause-Patent
  *
@@ -19,6 +20,7 @@
 #include <Library/GpioLib.h>
 #include <Library/HiiLib.h>
 #include <Library/IoLib.h>
+#include <Library/MemoryAllocationLib.h>
 #include <Library/NetLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -185,9 +187,10 @@ SetupVariables (
   VOID
   )
 {
-  UINTN Size;
-  UINT8 Var8;
-  UINT32 Var32;
+  UINTN      Size;
+  UINT8      Var8;
+  UINT32     Var32;
+  CHAR16     *AssetTagVar;
   EFI_STATUS Status;
 
   /*
@@ -236,6 +239,19 @@ SetupVariables (
   if (EFI_ERROR (Status)) {
     PcdSet32 (PcdSystemTableMode, PcdGet32 (PcdSystemTableMode));
   }
+
+  Size = ASSET_TAG_STR_STORAGE_SIZE * sizeof(CHAR16);
+  AssetTagVar = AllocateZeroPool(Size);
+  ASSERT (AssetTagVar != NULL);
+
+  Status = gRT->GetVariable(L"AssetTag",
+                  &gConfigDxeFormSetGuid,
+                  NULL, &Size, AssetTagVar);
+
+  if (EFI_ERROR (Status)) {
+	PcdSetPtrS(PcdAssetTag, &Size, (CHAR16 *)PcdGetPtr(PcdAssetTag));	
+  }
+
 
   Size = sizeof (UINT32);
   Status = gRT->GetVariable (L"SdIsArasan",
