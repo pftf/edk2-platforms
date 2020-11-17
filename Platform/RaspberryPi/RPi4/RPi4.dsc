@@ -523,6 +523,19 @@
   gRaspberryPiTokenSpaceGuid.PcdFanTemp|L"FanTemp"|gConfigDxeFormSetGuid|0x0|60
 
   #
+  # Select XHCI/PCIe mode
+  #
+  # 0  - DISABLED (not valid for rpi4)
+  # 1  - Xhci Enabled (default)
+  # 2  - Pcie Enabled
+  #
+  gRaspberryPiTokenSpaceGuid.PcdXhciPci|L"XhciPci"|gConfigDxeFormSetGuid|0x0|1
+  # SSDT selectors
+  gRaspberryPiTokenSpaceGuid.PcdXhci|L"Xhci"|gConfigDxeFormSetGuid|0x0|1
+  gRaspberryPiTokenSpaceGuid.PcdPci|L"Pci"|gConfigDxeFormSetGuid|0x0|0
+
+
+  #
   # Common UEFI ones.
   #
 

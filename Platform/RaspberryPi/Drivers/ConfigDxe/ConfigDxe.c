@@ -266,6 +266,39 @@ SetupVariables (
     ASSERT_EFI_ERROR (Status);
   }
 
+  if (mModelFamily >= 4) {
+	  Size = sizeof (UINT32);
+	  Status = gRT->GetVariable (L"XhciPci",
+								 &gConfigDxeFormSetGuid,
+								 NULL, &Size, &Var32);
+	  if (EFI_ERROR (Status) || (Var32 != 2)) {
+		  // enable Xhci by default
+		  Status = PcdSet32S (PcdXhciPci, 1);
+		  ASSERT_EFI_ERROR (Status);
+		  Status = PcdSet32S (PcdXhci, 1);
+		  ASSERT_EFI_ERROR (Status);
+		  Status = PcdSet32S (PcdPci, 0);
+		  ASSERT_EFI_ERROR (Status);
+	  } else {
+		  // enable PCIe
+		  Status = PcdSet32S (PcdXhciPci, 2);
+		  ASSERT_EFI_ERROR (Status);
+		  Status = PcdSet32S (PcdXhci, 0);
+		  ASSERT_EFI_ERROR (Status);
+		  Status = PcdSet32S (PcdPci, 1);
+		  ASSERT_EFI_ERROR (Status);
+	  }
+  } else {
+    // disable pcie and xhci
+    Status = PcdSet32S (PcdXhciPci, 0);
+    ASSERT_EFI_ERROR (Status);
+    Status = PcdSet32S (PcdXhci, 0);
+    ASSERT_EFI_ERROR (Status);
+    Status = PcdSet32S (PcdPci, 0);
+    ASSERT_EFI_ERROR (Status);
+  }
+
+
   Size = sizeof (AssetTagVar);
   Status = gRT->GetVariable (L"AssetTag",
                   &gConfigDxeFormSetGuid,
