@@ -754,6 +754,11 @@ STATIC CONST NAMESPACE_TABLES SdtTables[] = {
 	NULL
   },
   {
+    SIGNATURE_64 ('R', 'P', 'I', '4', 'P', 'C', 'I', 'E'),
+    PcdToken(PcdPci),
+	NULL
+  },
+  {
     SIGNATURE_64 ('R', 'P', 'I', 0, 0, 0, 0, 0),
     0,
     NULL
