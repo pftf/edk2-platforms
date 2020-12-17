@@ -1,3 +1,7 @@
+This branch is a testing/RFC branch for the SMCCC PCI conduit.
+It requires an TF-A built from 
+https://github.com/jlinton/arm-trusted-firmware/tree/rpi4_cppc_pci
+
 This branch holds all platforms actively maintained against the
 [edk2](https://github.com/tianocore/edk2) master branch.
 
